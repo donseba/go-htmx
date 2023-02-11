@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en-US" class="h-full bg-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ .PageTitle }}</title>
+
+    <link rel="icon" href="/assets/favicon.ico" sizes="any">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.8.5"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.7"></script>
+    <link href="https://unpkg.com/@tailwindcss/forms@0.2.1/dist/forms.min.css" rel="stylesheet">
+    {{ block "css" . }} {{ end }}
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <!-- Off-canvas menu for mobile, show/hide based on off-canvas menu state. -->
+        <div id="sidebar" class="relative z-40 lg:hidden hidden" role="dialog" aria-modal="true">
+            <div _="on click toggle .hidden on #sidebar" id="backdrawer" class="fixed inset-0 bg-gray-600 bg-opacity-75"></div>
+
+            <div class="fixed inset-0 z-40 flex">
+                <div class="relative flex w-full max-w-xs flex-1 flex-col bg-cyan-700 pt-5 pb-4">
+                    <div class="absolute top-0 right-0 -mr-12 pt-2">
+                        <button _="on click toggle .hidden on #sidebar" type="button" class="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                            <span class="sr-only">Close sidebar</span>
+                            <!-- Heroicon name: outline/x-mark -->
+                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="flex flex-shrink-0 items-center px-4">
+                        <img class="h-8 w-auto" src="/assets/go-logo.png">
+                    </div>
+                    <nav class="mt-5 h-full flex-shrink-0 divide-y divide-cyan-800 overflow-y-auto" aria-label="Sidebar">
+                        <div class="space-y-1 px-2">
+                            <!-- Current: "bg-cyan-800 text-white", Default: "text-cyan-100 hover:text-white hover:bg-cyan-600" -->
+                            <a href="#" hx-get="/" hx-target="#content" hx-push-url="true" class="text-cyan-100 hover:text-white hover:bg-cyan-600 group flex items-center px-2 py-2 text-base font-medium rounded-md" aria-current="page">
+                                <!-- Heroicon name: outline/home -->
+                                <svg class="mr-4 h-6 w-6 flex-shrink-0 text-cyan-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                                </svg>
+                                Home
+                            </a>
+
+                            <a href="#" hx-get="/example" hx-target="#content" hx-push-url="true" class="text-cyan-100 hover:text-white hover:bg-cyan-600 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                                <!-- Heroicon name: outline/clock -->
+                                <svg class="mr-4 h-6 w-6 flex-shrink-0 text-cyan-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Example
+                            </a>
+                        </div>
+                    </nav>
+                </div>
+
+                <div class="w-14 flex-shrink-0" aria-hidden="true">
+                    <!-- Dummy element to force sidebar to shrink to fit close icon -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Static sidebar for desktop -->
+        <div class="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+            <!-- Sidebar component, swap this element with another sidebar if you like -->
+            <div class="flex flex-grow flex-col overflow-y-auto bg-cyan-700 pt-5 pb-4">
+                <div class="flex flex-shrink-0 items-center px-4">
+                    <img class="h-8 w-auto" src="assets/go-logo.png" alt="Go logo">
+                </div>
+                <nav  class="mt-5 flex flex-1 flex-col divide-y divide-cyan-800 overflow-y-auto" aria-label="Sidebar">
+                    <div class="space-y-1 px-2">
+                        <!-- Current: "bg-cyan-800 text-white", Default: "text-cyan-100 hover:text-white hover:bg-cyan-600" -->
+                        <a href="#" hx-get="/" hx-target="#content" hx-push-url="true" class="text-cyan-100 hover:text-white hover:bg-cyan-600 group flex items-center px-2 py-2 text-base font-medium rounded-md" aria-current="page">
+                            <!-- Heroicon name: outline/home -->
+                            <svg class="mr-4 h-6 w-6 flex-shrink-0 text-cyan-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                            </svg>
+                            Home
+                        </a>
+
+                        <a href="#" hx-get="/example" hx-target="#content" hx-push-url="true" class="text-cyan-100 hover:text-white hover:bg-cyan-600 group flex items-center px-2 py-2 text-base font-medium rounded-md">
+                            <!-- Heroicon name: outline/clock -->
+                            <svg class="mr-4 h-6 w-6 flex-shrink-0 text-cyan-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Example
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <div class="flex flex-1 flex-col lg:pl-64">
+            <div class="flex h-16 flex-shrink-0 border-b border-gray-200 bg-white lg:border-none">
+                <button _="on click toggle .hidden on #sidebar" type="button" class="border-r border-gray-200 px-4 text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 lg:hidden">
+                    <span class="sr-only">Open sidebar</span>
+                    <!-- Heroicon name: outline/bars-3-center-left -->
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h16.5" />
+                    </svg>
+                </button>
+                <!-- Search bar -->
+                <div class="flex flex-1 justify-between px-4 sm:px-6 lg:mx-auto lg:max-w-6xl lg:px-8">
+                    <div class="flex flex-1">
+
+                    </div>
+                    <div class="ml-4 flex items-center md:ml-6">
+                        <button type="button" class="rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
+                            <span class="sr-only">View notifications</span>
+                            <!-- Heroicon name: outline/bell -->
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                            </svg>
+                        </button>
+
+                        <!-- Profile dropdown -->
+                        <div class="relative ml-3">
+                            <div>
+                                <button _="on click toggle .hidden on #profile-menu" type="button" class="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 lg:rounded-md lg:p-2 lg:hover:bg-gray-50" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                    <img class="h-8 w-8 rounded-full" src="/assets/gopher-cape.svg" alt="">
+                                    <span class="ml-3 hidden text-sm font-medium text-gray-700 lg:block"><span class="sr-only">Open user menu for </span>Go Gopher</span>
+                                    <!-- Heroicon name: mini/chevron-down -->
+                                    <svg class="ml-1 hidden h-5 w-5 flex-shrink-0 text-gray-400 lg:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div id="profile-menu" class="hidden absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                                <!-- Active: "bg-gray-100", Not Active: "" -->
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-0">Your Profile</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-1">Settings</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-2">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <main class="flex-1 pb-8">
+                <!-- Page header -->
+                <div class="bg-white shadow">
+                    <div class="px-4 sm:px-6 lg:mx-auto lg:max-w-6xl lg:px-8">
+                        <div class="py-6 md:flex md:items-center md:justify-between lg:border-t lg:border-gray-200">
+                            <div class="min-w-0 flex-1">
+                                <!-- Profile -->
+                                <div class="flex items-center">
+                                    <img class="hidden h-16 w-16 rounded-full sm:block" src="/assets/gopher-cape.svg" alt="">
+                                    <div>
+                                        <div class="flex items-center">
+                                            <img class="h-16 w-16 rounded-full sm:hidden" src="/assets/gopher-cape.svg" alt="">
+                                            <h1 class="ml-3 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:leading-9">Good morning, Full stack Gopher!</h1>
+                                        </div>
+                                        <dl class="mt-6 flex flex-col sm:ml-3 sm:mt-1 sm:flex-row sm:flex-wrap">
+                                            <dd class="mt-3 flex items-center text-sm font-medium capitalize text-gray-500 sm:mr-6 sm:mt-0">
+                                                <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                                                </svg>
+                                                Golang & HTMX & Hyperscript
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8" id="content">
+                    {{ block "content" . }} {{ end }}
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>
