@@ -13,6 +13,7 @@ type (
 	TemplateData struct {
 		Context   func() context.Context
 		PageTitle string
+		BaseURL   string
 		Data      map[string]interface{}
 	}
 )
@@ -24,6 +25,7 @@ func (s *Service) TemplateData(ctx context.Context) (*TemplateData, error) {
 		},
 		PageTitle: "go-htmx",
 		Data:      make(map[string]interface{}),
+		BaseURL:   s.Config().ServerAddress,
 	}
 
 	return app, nil
@@ -35,7 +37,8 @@ func (s *Service) Template(r *http.Request) (*template.Template, error) {
 		return nil, err
 	}
 
-	if r.Header.Get("HX-Request") == "true" {
+	hxh := s.HxHeader(r.Context())
+	if hxh.HxRequest {
 		var tmp []string
 
 		for i := 0; i < len(s.Config().DefaultTemplatesHx); i++ {

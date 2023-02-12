@@ -22,7 +22,7 @@ func parseConfig() *Config {
 		Debug:              envAsBool("DEBUG", false),
 		DefaultTemplates:   envAsSlice("DEFAULT_TEMPLATES", []string{"index.gohtml"}, ","),
 		DefaultTemplatesHx: envAsSlice("DEFAULT_TEMPLATES_HX", []string{"hx/index.gohtml"}, ","),
-		ServerAddress:      env("SERVER_ADDR", ":8888"),
+		ServerAddress:      env("SERVER_ADDR", "localhost:8888"),
 		TemplateDir:        env("TEMPLATE_DIR", "/templates"),
 	}
 }

@@ -4,10 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/donseba/go-htmx/pkg/htmx"
 	"github.com/go-chi/chi/v5"
+	"golang.org/x/net/websocket"
 )
 
 type (
@@ -29,6 +33,9 @@ func (c *Controller) Routes() http.Handler {
 	r.Get("/example", c.getExample)
 	r.Get("/who-are-you", c.getWhoAreYou)
 	r.Post("/pokemon", c.postPokemon)
+
+	r.Get("/echo", c.wsEcho)
+	r.Get("/heartbeat", c.wsHeartbeat)
 
 	return r
 }
@@ -125,4 +132,48 @@ func (c *Controller) postPokemon(w http.ResponseWriter, r *http.Request) {
 	td.Data["Pokemon"] = pokemon
 
 	c.app.Serve(td, []string{"pokemon.gohtml"}).ServeHTTP(w, r)
+}
+
+func (c *Controller) wsHeartbeat(w http.ResponseWriter, r *http.Request) {
+	handler := websocket.Handler(func(ws *websocket.Conn) {
+		defer ws.Close()
+
+		for i := 0; ; i = i + 1 {
+			time.Sleep(1 * time.Second)
+
+			random := rand.Int()
+			message := `<div id="idMessageHeartbeat" hx-swap-oob="true">Message ` + strconv.Itoa(i) + `: ` + strconv.Itoa(random) + `</div>`
+
+			if err := websocket.Message.Send(ws, message); err != nil {
+				c.app.Logger().Print("send", err)
+				return
+			}
+		}
+	})
+
+	handler.ServeHTTP(w, r)
+}
+
+func (c *Controller) wsEcho(w http.ResponseWriter, r *http.Request) {
+	handler := websocket.Handler(func(ws *websocket.Conn) {
+		defer ws.Close()
+
+		for {
+			msg := ""
+
+			if err := websocket.Message.Receive(ws, &msg); err != nil {
+				c.app.Logger().Print("receive", err)
+				return
+			}
+
+			response := `<div id="idMessageEcho" hx-swap-oob="true">` + msg + `</div>`
+
+			if err := websocket.Message.Send(ws, response); err != nil {
+				c.app.Logger().Print("send", err)
+				return
+			}
+		}
+	})
+
+	handler.ServeHTTP(w, r)
 }
