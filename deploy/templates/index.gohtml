@@ -151,7 +151,7 @@
                                     <div>
                                         <div class="flex items-center">
                                             <img class="h-16 w-16 rounded-full sm:hidden" src="/assets/gopher-cape.svg" alt="">
-                                            <h1 class="ml-3 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:leading-9">Good morning, Full stack Gopher!</h1>
+                                            <div hx-get="/greeting" hx-trigger="load delay:0.01s" class="ml-3 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:leading-9"></div>
                                         </div>
                                         <dl class="mt-6 flex flex-col sm:ml-3 sm:mt-1 sm:flex-row sm:flex-wrap">
                                             <dd class="mt-3 flex items-center text-sm font-medium capitalize text-gray-500 sm:mr-6 sm:mt-0">

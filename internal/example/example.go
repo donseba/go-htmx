@@ -14,6 +14,10 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 type (
 	Controller struct {
 		app *htmx.Service
@@ -31,6 +35,7 @@ func (c *Controller) Routes() http.Handler {
 
 	r.Get("/", c.getHome)
 	r.Get("/example", c.getExample)
+	r.Get("/greeting", c.getGreeting)
 	r.Get("/who-are-you", c.getWhoAreYou)
 	r.Post("/pokemon", c.postPokemon)
 
@@ -176,4 +181,15 @@ func (c *Controller) wsEcho(w http.ResponseWriter, r *http.Request) {
 	})
 
 	handler.ServeHTTP(w, r)
+}
+
+func (c *Controller) getGreeting(w http.ResponseWriter, r *http.Request) {
+	formats := []string{
+		"Hi, %s. Welcome!",
+		"Great to see you, %s!",
+		"Hail, %s! Well met!",
+		"Hello, full stack %s!",
+	}
+
+	_, _ = w.Write([]byte(fmt.Sprintf(formats[rand.Intn(len(formats))], "gopher")))
 }
