@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -83,20 +85,24 @@ func (s *Service) serveError(td *TemplateData) http.HandlerFunc {
 		tmpl, err = s.Template(r)
 		if err != nil {
 			s.logger.Print("msg", "template status error", "err", err)
+			_, _ = w.Write([]byte(errors.Wrap(err, "error serving error").Error()))
 			return
 		}
 
 		tmpl, err = tmpl.ParseFiles(
 			filepath.Join(s.rootDir, s.config.TemplateDir, "error.gohtml"),
 		)
+
 		if err != nil {
 			s.logger.Print("msg", "template status error", "err", err)
+			_, _ = w.Write([]byte(errors.Wrap(err, "error serving error").Error()))
 			return
 		}
 
 		err = tmpl.ExecuteTemplate(w, "index.gohtml", td)
 		if err != nil {
-			s.logger.Print("msg", "template status error", "err", err)
+			s.logger.Print("msg", "error serving error", "err", err)
+			_, _ = w.Write([]byte(errors.Wrap(err, "error serving error").Error()))
 			return
 		}
 	}

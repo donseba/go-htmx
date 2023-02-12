@@ -75,30 +75,10 @@ type Pokemon struct {
 	Abilities []struct {
 		Ability struct {
 			Name string `json:"name"`
-			URL  string `json:"url"`
 		} `json:"ability"`
-		IsHidden bool `json:"is_hidden"`
-		Slot     int  `json:"slot"`
 	} `json:"abilities"`
-	Height int `json:"height"`
-	ID     int `json:"id"`
-	Moves  []struct {
-		Move struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		} `json:"move"`
-		VersionGroupDetails []struct {
-			LevelLearnedAt  int `json:"level_learned_at"`
-			MoveLearnMethod struct {
-				Name string `json:"name"`
-				URL  string `json:"url"`
-			} `json:"move_learn_method"`
-			VersionGroup struct {
-				Name string `json:"name"`
-				URL  string `json:"url"`
-			} `json:"version_group"`
-		} `json:"version_group_details"`
-	} `json:"moves"`
+	Height  int    `json:"height"`
+	ID      int    `json:"id"`
 	Name    string `json:"name"`
 	Sprites struct {
 		BackDefault      string `json:"back_default"`
@@ -110,7 +90,6 @@ type Pokemon struct {
 		FrontShiny       string `json:"front_shiny"`
 		FrontShinyFemale string `json:"front_shiny_female"`
 	} `json:"sprites"`
-
 	Weight int `json:"weight"`
 }
 
@@ -125,9 +104,8 @@ func (c *Controller) postPokemon(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch resp.StatusCode {
-	case http.StatusNotFound:
-		c.app.Error(w, r, errors.New(fmt.Sprintf("unable to find pokemon : %s", search)), http.StatusNotFound)
+	if resp.StatusCode != http.StatusOK {
+		c.app.Error(w, r, errors.New(fmt.Sprintf("unable to find pokemon : %s", search)), resp.StatusCode)
 		return
 	}
 
