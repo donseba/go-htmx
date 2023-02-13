@@ -2,9 +2,8 @@ module github.com/donseba/go-htmx
 
 go 1.19
 
-require github.com/go-chi/chi/v5 v5.0.8
-
 require (
+	github.com/go-chi/chi/v5 v5.0.8
 	github.com/labstack/echo/v4 v4.10.0
 	github.com/pkg/errors v0.9.1
 	golang.org/x/net v0.6.0
