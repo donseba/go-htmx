@@ -1,31 +1,18 @@
-package htmx
+package htmx_chi
 
 import (
 	"context"
 	"net/http"
 	"strings"
+
+	go_htmx "github.com/donseba/go-htmx"
 )
 
-const hxHeaderCtx = "hx-header-ctx"
-
-type (
-	HxHeader struct {
-		HxBoosted               bool
-		HxCurrentURL            string
-		HxHistoryRestoreRequest bool
-		HxPrompt                string
-		HxRequest               bool
-		HxTarget                string
-		HxTriggerName           string
-		HxTrigger               string
-	}
-)
-
-func (s *Service) HxHeaderMiddleWare(next http.Handler) http.Handler {
+func MiddleWare(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		hxh := HxHeader{
+		hxh := go_htmx.HxHeaderRequest{
 			HxBoosted:               parseStrAsBool(r.Header.Get("HX-Boosted")),
 			HxCurrentURL:            r.Header.Get("HX-Current-URL"),
 			HxHistoryRestoreRequest: parseStrAsBool(r.Header.Get("HX-History-Restore-Request")),
@@ -36,22 +23,13 @@ func (s *Service) HxHeaderMiddleWare(next http.Handler) http.Handler {
 			HxTrigger:               r.Header.Get("HX-Trigger"),
 		}
 
-		ctx = context.WithValue(ctx, hxHeaderCtx, hxh)
+		ctx = context.WithValue(ctx, go_htmx.ContextRequestHeader, hxh)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
 }
 
-func (s *Service) HxHeader(ctx context.Context) HxHeader {
-	header := ctx.Value(hxHeaderCtx)
-
-	if val, ok := header.(HxHeader); ok {
-		return val
-	}
-
-	return HxHeader{}
-}
 func parseStrAsBool(str string) bool {
 	if strings.EqualFold(str, "true") {
 		return true

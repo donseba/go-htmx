@@ -6,20 +6,8 @@ import (
 	"strings"
 )
 
-type (
-	Config struct {
-		ServerAddress string
-		Debug         bool
-
-		TemplateDir        string
-		DefaultTemplates   []string
-		DefaultTemplatesHx []string
-	}
-)
-
 func parseConfig() *Config {
 	return &Config{
-		Debug:              envAsBool("DEBUG", false),
 		DefaultTemplates:   envAsSlice("DEFAULT_TEMPLATES", []string{"index.gohtml"}, ","),
 		DefaultTemplatesHx: envAsSlice("DEFAULT_TEMPLATES_HX", []string{"hx/index.gohtml"}, ","),
 		ServerAddress:      env("SERVER_ADDR", "localhost:8888"),

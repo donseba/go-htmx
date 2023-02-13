@@ -1,4 +1,4 @@
-package example
+package main
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/donseba/go-htmx/pkg/htmx"
+	go_htmx "github.com/donseba/go-htmx"
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/net/websocket"
 )
@@ -20,11 +20,11 @@ func init() {
 
 type (
 	Controller struct {
-		app *htmx.Service
+		app *go_htmx.Service
 	}
 )
 
-func NewController(app *htmx.Service) *Controller {
+func NewController(app *go_htmx.Service) *Controller {
 	return &Controller{
 		app: app,
 	}

@@ -11,10 +11,11 @@ import (
 
 type (
 	TemplateData struct {
-		Context   func() context.Context
-		PageTitle string
-		BaseURL   string
-		Data      map[string]interface{}
+		Context         func() context.Context
+		PageTitle       string
+		BaseURL         string
+		Data            map[string]interface{}
+		HxHeaderRequest HxHeaderRequest
 	}
 )
 
@@ -23,9 +24,10 @@ func (s *Service) TemplateData(ctx context.Context) (*TemplateData, error) {
 		Context: func() context.Context {
 			return ctx
 		},
-		PageTitle: "go-htmx",
-		Data:      make(map[string]interface{}),
-		BaseURL:   s.Config().ServerAddress,
+		PageTitle:       "go-htmx",
+		Data:            make(map[string]interface{}),
+		BaseURL:         s.baseURL.String(),
+		HxHeaderRequest: s.HxHeader(ctx),
 	}
 
 	return app, nil
@@ -42,7 +44,7 @@ func (s *Service) Template(r *http.Request) (*template.Template, error) {
 		var tmp []string
 
 		for i := 0; i < len(s.Config().DefaultTemplatesHx); i++ {
-			tmp = append(tmp, filepath.Join(s.rootDir, s.Config().TemplateDir, s.Config().DefaultTemplatesHx[i]))
+			tmp = append(tmp, filepath.Join(s.appDir, s.Config().TemplateDir, s.Config().DefaultTemplatesHx[i]))
 		}
 
 		return tmpl.ParseFiles(tmp...)
@@ -50,7 +52,7 @@ func (s *Service) Template(r *http.Request) (*template.Template, error) {
 
 	var tmp []string
 	for i := 0; i < len(s.Config().DefaultTemplates); i++ {
-		tmp = append(tmp, filepath.Join(s.rootDir, s.Config().TemplateDir, s.Config().DefaultTemplates[i]))
+		tmp = append(tmp, filepath.Join(s.appDir, s.Config().TemplateDir, s.Config().DefaultTemplates[i]))
 	}
 
 	return tmpl.ParseFiles(tmp...)
@@ -61,7 +63,7 @@ func (s *Service) Error(w http.ResponseWriter, r *http.Request, inErr error, sta
 
 	td, err := s.TemplateData(ctx)
 	if err != nil {
-		s.logger.Print(err)
+		s.Logger().Print(err)
 		return
 	}
 	td.Data["Error"] = inErr
@@ -87,24 +89,24 @@ func (s *Service) serveError(td *TemplateData) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tmpl, err = s.Template(r)
 		if err != nil {
-			s.logger.Print("msg", "template status error", "err", err)
+			s.Logger().Print("msg", "template status error", "err", err)
 			_, _ = w.Write([]byte(errors.Wrap(err, "error serving error").Error()))
 			return
 		}
 
 		tmpl, err = tmpl.ParseFiles(
-			filepath.Join(s.rootDir, s.config.TemplateDir, "error.gohtml"),
+			filepath.Join(s.appDir, s.config.TemplateDir, s.config.ErrorTemplate),
 		)
 
 		if err != nil {
-			s.logger.Print("msg", "template status error", "err", err)
+			s.Logger().Print("msg", "template status error", "err", err)
 			_, _ = w.Write([]byte(errors.Wrap(err, "error serving error").Error()))
 			return
 		}
 
 		err = tmpl.ExecuteTemplate(w, "index.gohtml", td)
 		if err != nil {
-			s.logger.Print("msg", "error serving error", "err", err)
+			s.Logger().Print("msg", "error serving error", "err", err)
 			_, _ = w.Write([]byte(errors.Wrap(err, "error serving error").Error()))
 			return
 		}
@@ -126,7 +128,7 @@ func (s *Service) Serve(templateData *TemplateData, templates []string) http.Han
 
 		var temps = make([]string, len(templates))
 		for i := 0; i < len(templates); i++ {
-			temps[i] = filepath.Join(s.rootDir, s.Config().TemplateDir, templates[i])
+			temps[i] = filepath.Join(s.appDir, s.Config().TemplateDir, templates[i])
 		}
 
 		tmpl, err = tmpl.ParseFiles(temps...)

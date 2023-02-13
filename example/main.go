@@ -6,43 +6,47 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/donseba/go-htmx/internal/example"
-	"github.com/donseba/go-htmx/pkg/htmx"
+	"github.com/donseba/go-htmx"
+	htmx_chi "github.com/donseba/go-htmx/middleware/chi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 )
 
 type (
 	App struct {
+		server *http.Server
 		logger htmx.Logger
 		router chi.Router
-		server htmx.Server
 		htmx   *htmx.Service
 	}
 )
 
 func main() {
 	app := new(App)
-
 	app.logger = log.New(os.Stdout, "go-htmx | ", 0)
 
-	app.logger.Print("load env file")
-	err := godotenv.Load(".env")
+	app.logger.Print("start htmx service")
+	var err error
+	app.htmx, err = htmx.NewService(&htmx.Config{
+		ServerAddress:      "localhost:8888",
+		TemplateDir:        "templates",
+		TemplateFuncs:      nil,
+		ErrorTemplate:      filepath.Join("error.gohtml"),
+		DefaultTemplates:   []string{filepath.Join("index.gohtml")},
+		DefaultTemplatesHx: []string{filepath.Join("hx", "index.gohtml")},
+		Logger:             app.logger,
+	})
 	if err != nil {
 		app.logger.Fatal(errors.Wrap(err, "error loading .env file"))
 	}
-
-	app.logger.Print("start htmx service")
-	app.htmx = htmx.NewService(app.logger, nil)
 
 	app.logger.Print("start chi router")
 	app.router = chi.NewRouter()
 	app.router.Use(middleware.Logger)
 	app.router.Use(middleware.Recoverer)
 	app.router.Use(middleware.StripSlashes)
-	app.router.Use(app.htmx.HxHeaderMiddleWare)
+	app.router.Use(htmx_chi.MiddleWare)
 
 	app.server = &http.Server{
 		Addr:    app.htmx.Config().ServerAddress,
@@ -53,7 +57,7 @@ func main() {
 		filepath.Join(app.htmx.Root(), "assets"),
 	))))
 
-	app.router.Mount("/", example.NewController(app.htmx).Routes())
+	app.router.Mount("/", NewController(app.htmx).Routes())
 
 	app.logger.Printf("start server on : %s", app.htmx.Config().ServerAddress)
 
