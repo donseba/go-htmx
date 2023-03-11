@@ -2,7 +2,6 @@ package htmx
 
 import (
 	"context"
-	"strings"
 )
 
 const ContextRequestHeader = "htmx-request-header"
@@ -20,7 +19,7 @@ type (
 	}
 )
 
-func (s *Service) HxHeader(ctx context.Context) HxHeaderRequest {
+func (s *HTMX) HxHeader(ctx context.Context) HxHeaderRequest {
 	header := ctx.Value(ContextRequestHeader)
 
 	if val, ok := header.(HxHeaderRequest); ok {
@@ -28,12 +27,4 @@ func (s *Service) HxHeader(ctx context.Context) HxHeaderRequest {
 	}
 
 	return HxHeaderRequest{}
-}
-
-func HxStrToBool(str string) bool {
-	if strings.EqualFold(str, "true") {
-		return true
-	}
-
-	return false
 }

@@ -1,4 +1,4 @@
-package htmx_chi
+package middleware
 
 import (
 	"context"
