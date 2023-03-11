@@ -7,7 +7,7 @@ import (
 const ContextRequestHeader = "htmx-request-header"
 
 type (
-	HxHeaderRequest struct {
+	HxRequestHeader struct {
 		HxBoosted               bool
 		HxCurrentURL            string
 		HxHistoryRestoreRequest bool
@@ -19,12 +19,12 @@ type (
 	}
 )
 
-func (s *HTMX) HxHeader(ctx context.Context) HxHeaderRequest {
+func (s *HTMX) HxHeader(ctx context.Context) HxRequestHeader {
 	header := ctx.Value(ContextRequestHeader)
 
-	if val, ok := header.(HxHeaderRequest); ok {
+	if val, ok := header.(HxRequestHeader); ok {
 		return val
 	}
 
-	return HxHeaderRequest{}
+	return HxRequestHeader{}
 }

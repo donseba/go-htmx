@@ -11,7 +11,7 @@ func MiddleWare(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		hxh := htmx.HxHeaderRequest{
+		hxh := htmx.HxRequestHeader{
 			HxBoosted:               htmx.HxStrToBool(r.Header.Get("HX-Boosted")),
 			HxCurrentURL:            r.Header.Get("HX-Current-URL"),
 			HxHistoryRestoreRequest: htmx.HxStrToBool(r.Header.Get("HX-History-Restore-Request")),

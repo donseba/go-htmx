@@ -9,7 +9,7 @@ type (
 	Handler struct {
 		w          http.ResponseWriter
 		r          *http.Request
-		request    HxHeaderRequest
+		request    HxRequestHeader
 		response   *HxResponseHeader
 		statusCode int
 	}

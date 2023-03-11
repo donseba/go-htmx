@@ -1,8 +1,9 @@
 # go-htmx
-Fullstack example using [golang](https://go.dev), [htmx](https://htmx.org), [_hyperscript](https://hyperscript.org) & [tailwindcss](https://tailwindcss.com)
+unobstructive HTMX integration in golang applications.
 
-# Example
-https://user-images.githubusercontent.com/2788923/218283740-b0c3e417-3629-41b3-86bd-e252a6b7f146.mp4
+This package consists of two main parts, 
+1) Middleware to catch the HTMX headers from the request
+2) Handler with io.Writer interface to serve content.
 
 # Getting started
 `go get github.com/donseba/go-htmx`
@@ -14,27 +15,40 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
-
 
 	"github.com/donseba/go-htmx"
-	"github.com/pkg/errors"
+	"github.com/donseba/go-htmx/middleware"
 )
 
-func main(){
-    htmxService, err := htmx.NewService(&htmx.Config{
-		ServerAddress:      "localhost:8888",
-		TemplateDir:        "templates",
-		TemplateFuncs:      nil,
-		ErrorTemplate:      filepath.Join("error.gohtml"),
-		DefaultTemplates:   []string{filepath.Join("index.gohtml")},
-		DefaultTemplatesHx: []string{filepath.Join("hx", "index.gohtml")},
-		Logger:             log.New(os.Stdout, "go-htmx | ", 0),
-	})
-	if err != nil {
-		panic(errors.Wrap(err, "error loading .env file"))
+type App struct {
+	htmx *htmx.HTMX
+}
+
+func main() {
+	// new app with htmx instance
+	app := &App{
+		htmx: htmx.New(),
 	}
+
+	mux := http.NewServeMux()
+	// wrap the htmx example middleware around the http handler
+	mux.Handle("/", middleware.MiddleWare(http.HandlerFunc(app.Home)))
+
+	err := http.ListenAndServe(":3000", mux)
+	log.Fatal(err)
+}
+
+func (a *App) Home(w http.ResponseWriter, r *http.Request) {
+	// initiate a new htmx handler
+	h := a.htmx.NewHandler(w, r)
+
+	// set the headers for the response, see docs for more options
+	h.PushURL("http://push.url")
+	h.ReTarget("#ReTarged")
+
+	// write the output like you normally do.
+	// check inspector tool in browser to see that the headers are set.
+	_, _ = h.Write([]byte("OK"))
 }
 ```
 
