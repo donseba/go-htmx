@@ -49,7 +49,7 @@ func TestNew(t *testing.T) {
 		handler.Trigger(trigger)
 		handler.TriggerAfterSettle(triggerAfterSettle)
 		handler.TriggerAfterSwap(triggerAfterSwap)
-		handler.StatusCode(http.StatusOK)
+		handler.WriteHeader(http.StatusOK)
 
 		i, err := handler.Write(nil)
 		if err != nil {

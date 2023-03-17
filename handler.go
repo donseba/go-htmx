@@ -7,14 +7,16 @@ import (
 
 type (
 	Handler struct {
-		w          http.ResponseWriter
-		r          *http.Request
-		request    HxRequestHeader
-		response   *HxResponseHeader
-		statusCode int
+		w           http.ResponseWriter
+		r           *http.Request
+		request     HxRequestHeader
+		response    *HxResponseHeader
+		statusCode  int
+		wroteHeader bool
 	}
 )
 
+// Write writes the data to the connection as part of an HTTP reply.
 func (h *Handler) Write(data []byte) (n int, err error) {
 	w := h.w
 
@@ -22,12 +24,24 @@ func (h *Handler) Write(data []byte) (n int, err error) {
 		w.Header().Set(k.String(), v)
 	}
 
-	if h.statusCode == 0 {
-		h.statusCode = http.StatusOK
-	}
-	w.WriteHeader(h.statusCode)
+	w.WriteHeader(http.StatusOK)
 
 	return w.Write(data)
+}
+
+// WriteHeader sets the response status
+func (h *Handler) WriteHeader(code int) {
+	if h.wroteHeader {
+		return
+	}
+
+	h.statusCode = code
+	h.wroteHeader = true
+}
+
+// WriteHeader sets the response status
+func (h *Handler) Header() http.Header {
+	return h.w.Header()
 }
 
 type LocationInput struct {
@@ -102,11 +116,6 @@ func (h *Handler) TriggerAfterSettle(val string) {
 // https://htmx.org/headers/hx-trigger/
 func (h *Handler) TriggerAfterSwap(val string) {
 	h.response.Set(HXTriggerAfterSwap, val)
-}
-
-// StatusCode sets the response status
-func (h *Handler) StatusCode(s int) {
-	h.statusCode = s
 }
 
 // Request returns the HxHeaders from the request
