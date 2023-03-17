@@ -19,8 +19,7 @@ func (h *Handler) Write(data []byte) (n int, err error) {
 	w := h.w
 
 	for k, v := range h.response.Headers {
-		w.Header().Set(k.String(), string(v))
-		w.Header().Set("A", "B")
+		w.Header().Set(k.String(), v)
 	}
 
 	if h.statusCode == 0 {
