@@ -11,22 +11,19 @@ type (
 		r           *http.Request
 		request     HxRequestHeader
 		response    *HxResponseHeader
-		statusCode  int
 		wroteHeader bool
 	}
 )
 
 // Write writes the data to the connection as part of an HTTP reply.
 func (h *Handler) Write(data []byte) (n int, err error) {
-	w := h.w
-
 	for k, v := range h.response.Headers {
-		w.Header().Set(k.String(), v)
+		h.w.Header().Set(k.String(), v)
 	}
 
-	w.WriteHeader(http.StatusOK)
+	h.WriteHeader(http.StatusOK)
 
-	return w.Write(data)
+	return h.w.Write(data)
 }
 
 // WriteHeader sets the response status
@@ -35,7 +32,7 @@ func (h *Handler) WriteHeader(code int) {
 		return
 	}
 
-	h.statusCode = code
+	h.w.WriteHeader(code)
 	h.wroteHeader = true
 }
 
