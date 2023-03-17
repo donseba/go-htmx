@@ -108,3 +108,8 @@ func (h *Handler) TriggerAfterSwap(val string) {
 func (h *Handler) StatusCode(s int) {
 	h.statusCode = s
 }
+
+// Request returns the HxHeaders from the request
+func (h *Handler) Request() HxRequestHeader {
+	return h.request
+}
