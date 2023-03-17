@@ -12,6 +12,7 @@ type (
 		request     HxRequestHeader
 		response    *HxResponseHeader
 		wroteHeader bool
+		statusCode  int
 	}
 )
 
@@ -21,8 +22,7 @@ func (h *Handler) Write(data []byte) (n int, err error) {
 		h.w.Header().Set(k.String(), v)
 	}
 
-	h.WriteHeader(http.StatusOK)
-
+	h.w.WriteHeader(h.statusCode)
 	return h.w.Write(data)
 }
 
@@ -32,11 +32,11 @@ func (h *Handler) WriteHeader(code int) {
 		return
 	}
 
-	h.w.WriteHeader(code)
 	h.wroteHeader = true
+	h.statusCode = code
 }
 
-// WriteHeader sets the response status
+// Header returns the header map that will be sent by WriteHeader
 func (h *Handler) Header() http.Header {
 	return h.w.Header()
 }

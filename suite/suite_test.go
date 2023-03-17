@@ -49,14 +49,12 @@ func TestNew(t *testing.T) {
 		handler.Trigger(trigger)
 		handler.TriggerAfterSettle(triggerAfterSettle)
 		handler.TriggerAfterSwap(triggerAfterSwap)
-		handler.WriteHeader(http.StatusOK)
+		handler.WriteHeader(http.StatusAccepted)
 
-		i, err := handler.Write(nil)
+		_, err := handler.Write([]byte("hi"))
 		if err != nil {
 			t.Error(err)
 		}
-
-		t.Logf("data written: %d", i)
 	})))
 	defer svr.Close()
 
@@ -73,14 +71,15 @@ func TestNew(t *testing.T) {
 	}
 
 	j, _ := json.Marshal(location)
-	assert.Equal(t, resp.Header.Get(htmx.HXLocation.String()), string(j))
-	assert.Equal(t, resp.Header.Get(htmx.HXPushUrl.String()), pushURL)
-	assert.Equal(t, resp.Header.Get(htmx.HXRedirect.String()), redirect)
-	assert.Equal(t, resp.Header.Get(htmx.HXRefresh.String()), htmx.HxBoolToStr(refresh))
-	assert.Equal(t, resp.Header.Get(htmx.HXReplaceUrl.String()), replaceURL)
-	assert.Equal(t, resp.Header.Get(htmx.HXReswap.String()), reSwap)
-	assert.Equal(t, resp.Header.Get(htmx.HXRetarget.String()), reTarget)
-	assert.Equal(t, resp.Header.Get(htmx.HXTrigger.String()), trigger)
-	assert.Equal(t, resp.Header.Get(htmx.HXTriggerAfterSwap.String()), triggerAfterSwap)
-	assert.Equal(t, resp.Header.Get(htmx.HXTriggerAfterSettle.String()), triggerAfterSettle)
+	assert.Equal(t, string(j), resp.Header.Get(htmx.HXLocation.String()))
+	assert.Equal(t, pushURL, resp.Header.Get(htmx.HXPushUrl.String()))
+	assert.Equal(t, redirect, resp.Header.Get(htmx.HXRedirect.String()))
+	assert.Equal(t, htmx.HxBoolToStr(refresh), resp.Header.Get(htmx.HXRefresh.String()))
+	assert.Equal(t, replaceURL, resp.Header.Get(htmx.HXReplaceUrl.String()))
+	assert.Equal(t, reSwap, resp.Header.Get(htmx.HXReswap.String()))
+	assert.Equal(t, reTarget, resp.Header.Get(htmx.HXRetarget.String()))
+	assert.Equal(t, trigger, resp.Header.Get(htmx.HXTrigger.String()))
+	assert.Equal(t, triggerAfterSwap, resp.Header.Get(htmx.HXTriggerAfterSwap.String()))
+	assert.Equal(t, triggerAfterSettle, resp.Header.Get(htmx.HXTriggerAfterSettle.String()))
+	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
 }
