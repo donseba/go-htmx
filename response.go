@@ -1,10 +1,12 @@
 package htmx
 
+import "net/http"
+
 type (
 	HxResponseKey string
 
 	HxResponseHeader struct {
-		Headers map[HxResponseKey]string
+		headers http.Header
 	}
 )
 
@@ -26,5 +28,5 @@ func (h HxResponseKey) String() string {
 }
 
 func (h *HxResponseHeader) Set(k HxResponseKey, val string) {
-	h.Headers[k] = val
+	h.headers[k.String()] = []string{val}
 }

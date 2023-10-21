@@ -7,38 +7,23 @@ import (
 
 type (
 	Handler struct {
-		w           http.ResponseWriter
-		r           *http.Request
-		request     HxRequestHeader
-		response    *HxResponseHeader
-		wroteHeader bool
-		statusCode  int
+		w        http.ResponseWriter
+		r        *http.Request
+		request  HxRequestHeader
+		response *HxResponseHeader
 	}
 )
 
-// Write writes the data to the connection as part of an HTTP reply.
-func (h *Handler) Write(data []byte) (n int, err error) {
-	for k, v := range h.response.Headers {
-		h.w.Header().Set(k.String(), v)
-	}
+func (h *Handler) Header() http.Header {
+	return h.w.Header()
+}
 
-	h.w.WriteHeader(h.statusCode)
+func (h *Handler) Write(data []byte) (n int, err error) {
 	return h.w.Write(data)
 }
 
-// WriteHeader sets the response status
 func (h *Handler) WriteHeader(code int) {
-	if h.wroteHeader {
-		return
-	}
-
-	h.wroteHeader = true
-	h.statusCode = code
-}
-
-// Header returns the header map that will be sent by WriteHeader
-func (h *Handler) Header() http.Header {
-	return h.w.Header()
+	h.w.WriteHeader(code)
 }
 
 type LocationInput struct {

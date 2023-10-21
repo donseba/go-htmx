@@ -19,9 +19,8 @@ func (s *HTMX) NewHandler(w http.ResponseWriter, r *http.Request) *Handler {
 		r:       r,
 		request: s.HxHeader(r.Context()),
 		response: &HxResponseHeader{
-			Headers: make(map[HxResponseKey]string),
+			headers: w.Header(),
 		},
-		statusCode: http.StatusOK,
 	}
 }
 
