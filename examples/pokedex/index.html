@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pokedex Search</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+        <style>
+            .htmx-indicator{
+                opacity:0;
+                transition: opacity 10ms ease-in;
+            }
+            .htmx-request .htmx-indicator{
+                opacity:1
+            }
+        </style>
+    </head>
+    <body class="bg-gray-200 p-10">
+        <div class="max-w-xl mx-auto ">
+            <h1 class="text-3xl mb-5 flex justify-center"><span>Pokedex Search</span></h1>
+            <div>
+                <input name="pokemon" type="text" hx-post="/search" hx-trigger="keyup delay:500ms" hx-target="#results" hx-indicator=".htmx-indicator"
+                       class="p-2 border rounded w-full" placeholder="Search for a Pokemon...">
+                <div class="my-2 htmx-indicator" >Loading...</div>
+                <div id="results" class="flex justify-center"></div>
+            </div>
+        </div>
+    </body>
+</html>

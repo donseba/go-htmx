@@ -16,6 +16,10 @@ type (
 	}
 )
 
+const (
+	StatusStopPolling = 286
+)
+
 // Write writes the data to the connection as part of an HTTP reply.
 func (h *Handler) Write(data []byte) (n int, err error) {
 	for k, v := range h.response.Headers {
@@ -34,6 +38,11 @@ func (h *Handler) WriteHeader(code int) {
 
 	h.wroteHeader = true
 	h.statusCode = code
+}
+
+// StopPolling sets the response status to 286, which will stop htmx from polling
+func (h *Handler) StopPolling() {
+	h.WriteHeader(StatusStopPolling)
 }
 
 // Header returns the header map that will be sent by WriteHeader
@@ -95,6 +104,11 @@ func (h *Handler) ReSwap(val string) {
 // ReTarget a CSS selector that updates the target of the content update to a different element on the page
 func (h *Handler) ReTarget(val string) {
 	h.response.Set(HXRetarget, val)
+}
+
+// ReSelect a CSS selector that allows you to choose which part of the response is used to be swapped in. Overrides an existing hx-select on the triggering element
+func (h *Handler) ReSelect(val string) {
+	h.response.Set(HXReselect, val)
 }
 
 // Trigger triggers events as soon as the response is received.
