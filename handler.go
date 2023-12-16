@@ -7,12 +7,10 @@ import (
 
 type (
 	Handler struct {
-		w           http.ResponseWriter
-		r           *http.Request
-		request     HxRequestHeader
-		response    *HxResponseHeader
-		wroteHeader bool
-		statusCode  int
+		w        http.ResponseWriter
+		r        *http.Request
+		request  HxRequestHeader
+		response *HxResponseHeader
 	}
 )
 
@@ -20,24 +18,19 @@ const (
 	StatusStopPolling = 286
 )
 
+// Header returns the header map that will be sent by WriteHeader
+func (h *Handler) Header() http.Header {
+	return h.w.Header()
+}
+
 // Write writes the data to the connection as part of an HTTP reply.
 func (h *Handler) Write(data []byte) (n int, err error) {
-	for k, v := range h.response.Headers {
-		h.w.Header().Set(k.String(), v)
-	}
-
-	h.w.WriteHeader(h.statusCode)
 	return h.w.Write(data)
 }
 
-// WriteHeader sets the response status
+// WriteHeader sets the HTTP response header with the provided status code.
 func (h *Handler) WriteHeader(code int) {
-	if h.wroteHeader {
-		return
-	}
-
-	h.wroteHeader = true
-	h.statusCode = code
+	h.w.WriteHeader(code)
 }
 
 // StopPolling sets the response status to 286, which will stop htmx from polling
