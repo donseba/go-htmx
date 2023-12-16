@@ -18,11 +18,6 @@ const (
 	StatusStopPolling = 286
 )
 
-// Header returns the header map that will be sent by WriteHeader
-func (h *Handler) Header() http.Header {
-	return h.w.Header()
-}
-
 // Write writes the data to the connection as part of an HTTP reply.
 func (h *Handler) Write(data []byte) (n int, err error) {
 	return h.w.Write(data)

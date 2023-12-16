@@ -83,3 +83,54 @@ func TestNew(t *testing.T) {
 	assert.Equal(t, triggerAfterSettle, resp.Header.Get(htmx.HXTriggerAfterSettle.String()))
 	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
 }
+
+func TestHxStrToBool(t *testing.T) {
+	assert.True(t, htmx.HxStrToBool("true"))
+	assert.False(t, htmx.HxStrToBool("false"))
+	assert.False(t, htmx.HxStrToBool("not a bool"))
+}
+
+func TestHxBoolToStr(t *testing.T) {
+	assert.Equal(t, "true", htmx.HxBoolToStr(true))
+	assert.Equal(t, "false", htmx.HxBoolToStr(false))
+}
+
+func TestHxResponseKey_String(t *testing.T) {
+	assert.Equal(t, "HX-Location", htmx.HXLocation.String())
+	assert.Equal(t, "HX-Push-Url", htmx.HXPushUrl.String())
+	assert.Equal(t, "HX-Redirect", htmx.HXRedirect.String())
+	assert.Equal(t, "HX-Refresh", htmx.HXRefresh.String())
+	assert.Equal(t, "HX-Replace-Url", htmx.HXReplaceUrl.String())
+	assert.Equal(t, "HX-Reswap", htmx.HXReswap.String())
+	assert.Equal(t, "HX-Retarget", htmx.HXRetarget.String())
+	assert.Equal(t, "HX-Reselect", htmx.HXReselect.String())
+	assert.Equal(t, "HX-Trigger", htmx.HXTrigger.String())
+	assert.Equal(t, "HX-Trigger-After-Settle", htmx.HXTriggerAfterSettle.String())
+	assert.Equal(t, "HX-Trigger-After-Swap", htmx.HXTriggerAfterSwap.String())
+}
+
+func TestStopPolling(t *testing.T) {
+	h := htmx.New()
+
+	svr := httptest.NewServer(middleware.MiddleWare(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := h.NewHandler(w, r)
+
+		_ = handler.Location(location)
+		handler.WriteHeader(htmx.StatusStopPolling)
+
+		_, err := handler.Write([]byte("hi"))
+		if err != nil {
+			t.Error(err)
+		}
+	})))
+	defer svr.Close()
+
+	resp, err := http.Get(svr.URL)
+	if err != nil {
+		t.Error("an error occurred while making the request")
+		return
+	}
+	defer resp.Body.Close()
+
+	assert.Equal(t, htmx.StatusStopPolling, resp.StatusCode)
+}
