@@ -19,7 +19,7 @@ type (
 	}
 )
 
-func (s *HTMX) HxHeader(ctx context.Context) HxRequestHeader {
+func (h *HTMX) HxHeader(ctx context.Context) HxRequestHeader {
 	header := ctx.Value(ContextRequestHeader)
 
 	if val, ok := header.(HxRequestHeader); ok {

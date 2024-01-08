@@ -1,5 +1,5 @@
 # go-htmx
-unobstructive HTMX integration in golang applications.
+Seamless HTMX integration in golang applications.
 
 This package consists of two main parts, 
 1) Middleware to catch the HTMX headers from the request
@@ -8,7 +8,7 @@ This package consists of two main parts,
 # Getting started
 `go get github.com/donseba/go-htmx`
 
-initialise the htmx service like so : 
+initialize the htmx service like so : 
 ```go
 package main
 
@@ -47,11 +47,18 @@ func (a *App) Home(w http.ResponseWriter, r *http.Request) {
 	h.ReTarget("#ReTarged")
 
 	// write the output like you normally do.
-	// check inspector tool in browser to see that the headers are set.
+	// check the inspector tool in the browser to see that the headers are set.
 	_, _ = h.Write([]byte("OK"))
 }
 ```
 
+### Swapping
+Swapping is a way to replace the content of a dom element with the content of the response.
+This is done by setting the `HX-Swap` header to the id of the dom element you want to swap.
+
+### Trigger Events 
+Trigger events are a way to trigger events on the dom element.
+This is done by setting the `HX-Trigger` header to the event you want to trigger.
 
 echo middleware example: 
 ```go

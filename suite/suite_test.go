@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/donseba/go-htmx"
 	"github.com/donseba/go-htmx/middleware"
@@ -133,4 +134,32 @@ func TestStopPolling(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, htmx.StatusStopPolling, resp.StatusCode)
+}
+
+func TestSwap(t *testing.T) {
+	h := htmx.New()
+
+	svr := httptest.NewServer(middleware.MiddleWare(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler := h.NewHandler(w, r)
+
+		_ = handler.Location(location)
+		handler.ReSwapWithObject(htmx.NewSwap().ScrollTop().Settle(1 * time.Second))
+
+		_, err := handler.Write([]byte("hi"))
+		if err != nil {
+			t.Error(err)
+		}
+	})))
+	defer svr.Close()
+
+	resp, err := http.Get(svr.URL)
+	if err != nil {
+		t.Error("an error occurred while making the request")
+		return
+	}
+	defer resp.Body.Close()
+
+	t.Log(resp.Header.Get(htmx.HXReswap.String()))
+
+	assert.Equal(t, "innerHTML scroll:top settle:1s", resp.Header.Get(htmx.HXReswap.String()))
 }
