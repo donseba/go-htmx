@@ -1,6 +1,12 @@
 # go-htmx
 **Seamless HTMX integration in golang applications.**
 
+[![GoDoc](https://pkg.go.dev/badge/github.com/donseba/go-htmx?status.svg)](https://pkg.go.dev/github.com/donseba/go-htmx?tab=doc)
+[![GoMod](https://img.shields.io/github/go-mod/go-version/donseba/go-htmx)](https://github.com/donseba/go-htmx)
+[![Size](https://img.shields.io/github/languages/code-size/donseba/go-htmx)](https://github.com/donseba/go-htmx)
+[![License](https://img.shields.io/github/license/donseba/go-htmx)](./LICENSE)
+[![Stars](https://img.shields.io/github/stars/donseba/go-htmx)](https://github.com/donseba/go-htmx/stargazers)
+
 ## Description
 
 This repository contains the htmx Go package, designed to enhance server-side handling of HTML generated with the [HTMX library](https://htmx.org/). 
