@@ -24,24 +24,26 @@ func NewTrigger() *Trigger {
 }
 
 // Add adds a trigger to the Trigger set
-func (t *Trigger) add(trigger eventContent) {
+func (t *Trigger) add(trigger eventContent) *Trigger {
 	t.triggers = append(t.triggers, trigger)
+
+	return t
 }
 
-func (t *Trigger) AddEvent(event string) {
-	t.add(eventContent{event: event, data: ""})
+func (t *Trigger) AddEvent(event string) *Trigger {
+	return t.add(eventContent{event: event, data: ""})
 }
 
-func (t *Trigger) AddEventDetailed(event, message string) {
+func (t *Trigger) AddEventDetailed(event, message string) *Trigger {
 	t.onlySimple = false
 
-	t.add(eventContent{event: event, data: message})
+	return t.add(eventContent{event: event, data: message})
 }
 
-func (t *Trigger) AddEventObject(event string, details map[string]string) {
+func (t *Trigger) AddEventObject(event string, details map[string]string) *Trigger {
 	t.onlySimple = false
 
-	t.add(eventContent{event: event, data: details})
+	return t.add(eventContent{event: event, data: details})
 }
 
 // String returns the string representation of the Trigger set

@@ -9,10 +9,10 @@ func TestNewTriggerMixed(t *testing.T) {
 		t.Error("expected trigger to not be nil")
 	}
 
-	trigger.AddEvent("foo")
-	trigger.AddEventDetailed("bar", "baz")
-	trigger.AddEventDetailed("qux", "quux")
-	trigger.AddEventObject("corge", map[string]string{"grault": "garply", "waldo": "fred", "plugh": "xyzzy", "thud": "wibble"})
+	trigger.AddEvent("foo").
+		AddEventDetailed("bar", "baz").
+		AddEventDetailed("qux", "quux").
+		AddEventObject("corge", map[string]string{"grault": "garply", "waldo": "fred", "plugh": "xyzzy", "thud": "wibble"})
 
 	expected := `{"bar":"baz","corge":{"grault":"garply","plugh":"xyzzy","thud":"wibble","waldo":"fred"},"foo":"","qux":"quux"}`
 
@@ -28,9 +28,9 @@ func TestNewTriggerSingle(t *testing.T) {
 		t.Error("expected trigger to not be nil")
 	}
 
-	trigger.AddEvent("foo")
-	trigger.AddEvent("bar")
-	trigger.AddEvent("baz")
+	trigger.AddEvent("foo").
+		AddEvent("bar").
+		AddEvent("baz")
 
 	expected := "foo, bar, baz"
 

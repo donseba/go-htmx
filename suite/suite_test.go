@@ -10,7 +10,6 @@ import (
 
 	"github.com/donseba/go-htmx"
 	"github.com/donseba/go-htmx/middleware"
-	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -72,42 +71,42 @@ func TestNew(t *testing.T) {
 	}
 
 	j, _ := json.Marshal(location)
-	assert.Equal(t, string(j), resp.Header.Get(htmx.HXLocation.String()))
-	assert.Equal(t, pushURL, resp.Header.Get(htmx.HXPushUrl.String()))
-	assert.Equal(t, redirect, resp.Header.Get(htmx.HXRedirect.String()))
-	assert.Equal(t, htmx.HxBoolToStr(refresh), resp.Header.Get(htmx.HXRefresh.String()))
-	assert.Equal(t, replaceURL, resp.Header.Get(htmx.HXReplaceUrl.String()))
-	assert.Equal(t, reSwap, resp.Header.Get(htmx.HXReswap.String()))
-	assert.Equal(t, reTarget, resp.Header.Get(htmx.HXRetarget.String()))
-	assert.Equal(t, trigger, resp.Header.Get(htmx.HXTrigger.String()))
-	assert.Equal(t, triggerAfterSwap, resp.Header.Get(htmx.HXTriggerAfterSwap.String()))
-	assert.Equal(t, triggerAfterSettle, resp.Header.Get(htmx.HXTriggerAfterSettle.String()))
-	assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+	equal(t, string(j), resp.Header.Get(htmx.HXLocation.String()))
+	equal(t, pushURL, resp.Header.Get(htmx.HXPushUrl.String()))
+	equal(t, redirect, resp.Header.Get(htmx.HXRedirect.String()))
+	equal(t, htmx.HxBoolToStr(refresh), resp.Header.Get(htmx.HXRefresh.String()))
+	equal(t, replaceURL, resp.Header.Get(htmx.HXReplaceUrl.String()))
+	equal(t, reSwap, resp.Header.Get(htmx.HXReswap.String()))
+	equal(t, reTarget, resp.Header.Get(htmx.HXRetarget.String()))
+	equal(t, trigger, resp.Header.Get(htmx.HXTrigger.String()))
+	equal(t, triggerAfterSwap, resp.Header.Get(htmx.HXTriggerAfterSwap.String()))
+	equal(t, triggerAfterSettle, resp.Header.Get(htmx.HXTriggerAfterSettle.String()))
+	equalInt(t, http.StatusAccepted, resp.StatusCode)
 }
 
 func TestHxStrToBool(t *testing.T) {
-	assert.True(t, htmx.HxStrToBool("true"))
-	assert.False(t, htmx.HxStrToBool("false"))
-	assert.False(t, htmx.HxStrToBool("not a bool"))
+	equalBool(t, true, htmx.HxStrToBool("true"))
+	equalBool(t, false, htmx.HxStrToBool("false"))
+	equalBool(t, false, htmx.HxStrToBool("not a bool"))
 }
 
 func TestHxBoolToStr(t *testing.T) {
-	assert.Equal(t, "true", htmx.HxBoolToStr(true))
-	assert.Equal(t, "false", htmx.HxBoolToStr(false))
+	equal(t, "true", htmx.HxBoolToStr(true))
+	equal(t, "false", htmx.HxBoolToStr(false))
 }
 
 func TestHxResponseKey_String(t *testing.T) {
-	assert.Equal(t, "HX-Location", htmx.HXLocation.String())
-	assert.Equal(t, "HX-Push-Url", htmx.HXPushUrl.String())
-	assert.Equal(t, "HX-Redirect", htmx.HXRedirect.String())
-	assert.Equal(t, "HX-Refresh", htmx.HXRefresh.String())
-	assert.Equal(t, "HX-Replace-Url", htmx.HXReplaceUrl.String())
-	assert.Equal(t, "HX-Reswap", htmx.HXReswap.String())
-	assert.Equal(t, "HX-Retarget", htmx.HXRetarget.String())
-	assert.Equal(t, "HX-Reselect", htmx.HXReselect.String())
-	assert.Equal(t, "HX-Trigger", htmx.HXTrigger.String())
-	assert.Equal(t, "HX-Trigger-After-Settle", htmx.HXTriggerAfterSettle.String())
-	assert.Equal(t, "HX-Trigger-After-Swap", htmx.HXTriggerAfterSwap.String())
+	equal(t, "HX-Location", htmx.HXLocation.String())
+	equal(t, "HX-Push-Url", htmx.HXPushUrl.String())
+	equal(t, "HX-Redirect", htmx.HXRedirect.String())
+	equal(t, "HX-Refresh", htmx.HXRefresh.String())
+	equal(t, "HX-Replace-Url", htmx.HXReplaceUrl.String())
+	equal(t, "HX-Reswap", htmx.HXReswap.String())
+	equal(t, "HX-Retarget", htmx.HXRetarget.String())
+	equal(t, "HX-Reselect", htmx.HXReselect.String())
+	equal(t, "HX-Trigger", htmx.HXTrigger.String())
+	equal(t, "HX-Trigger-After-Settle", htmx.HXTriggerAfterSettle.String())
+	equal(t, "HX-Trigger-After-Swap", htmx.HXTriggerAfterSwap.String())
 }
 
 func TestStopPolling(t *testing.T) {
@@ -133,7 +132,7 @@ func TestStopPolling(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	assert.Equal(t, htmx.StatusStopPolling, resp.StatusCode)
+	equalInt(t, htmx.StatusStopPolling, resp.StatusCode)
 }
 
 func TestSwap(t *testing.T) {
@@ -159,7 +158,23 @@ func TestSwap(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	t.Log(resp.Header.Get(htmx.HXReswap.String()))
+	equal(t, "innerHTML scroll:top settle:1s", resp.Header.Get(htmx.HXReswap.String()))
+}
 
-	assert.Equal(t, "innerHTML scroll:top settle:1s", resp.Header.Get(htmx.HXReswap.String()))
+func equal(t *testing.T, expected, actual string) {
+	if expected != actual {
+		t.Errorf("expected %s, got %s", expected, actual)
+	}
+}
+
+func equalInt(t *testing.T, expected, actual int) {
+	if expected != actual {
+		t.Errorf("expected %d, got %d", expected, actual)
+	}
+}
+
+func equalBool(t *testing.T, expected, actual bool) {
+	if expected != actual {
+		t.Errorf("expected %t, got %t", expected, actual)
+	}
 }

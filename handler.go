@@ -18,14 +18,25 @@ const (
 	StatusStopPolling = 286
 )
 
-// IsHxRequest returns true if the request is an htmx request
+// IsHxRequest returns true if the request is a htmx request.
 func (h *Handler) IsHxRequest() bool {
 	return h.request.HxRequest
 }
 
-// IsHxBoosted returns true if the request is an htmx request and the request is boosted
+// IsHxBoosted returns true if the request is a htmx request and the request is boosted
 func (h *Handler) IsHxBoosted() bool {
 	return h.request.HxBoosted
+}
+
+// IsHxHistoryRestoreRequest returns true if the request is a htmx request and the request is a history restore request
+func (h *Handler) IsHxHistoryRestoreRequest() bool {
+	return h.request.HxHistoryRestoreRequest
+}
+
+// RenderPartial returns true if the request is an HTMX request that is either boosted or a standard request,
+// provided it is not a history restore request.
+func (h *Handler) RenderPartial() bool {
+	return (h.request.HxRequest || h.request.HxBoosted) && !h.request.HxHistoryRestoreRequest
 }
 
 // Write writes the data to the connection as part of an HTTP reply.
