@@ -18,6 +18,27 @@ const (
 	StatusStopPolling = 286
 )
 
+// IsHxRequest returns true if the request is a htmx request.
+func (h *Handler) IsHxRequest() bool {
+	return h.request.HxRequest
+}
+
+// IsHxBoosted returns true if the request is a htmx request and the request is boosted
+func (h *Handler) IsHxBoosted() bool {
+	return h.request.HxBoosted
+}
+
+// IsHxHistoryRestoreRequest returns true if the request is a htmx request and the request is a history restore request
+func (h *Handler) IsHxHistoryRestoreRequest() bool {
+	return h.request.HxHistoryRestoreRequest
+}
+
+// RenderPartial returns true if the request is an HTMX request that is either boosted or a standard request,
+// provided it is not a history restore request.
+func (h *Handler) RenderPartial() bool {
+	return (h.request.HxRequest || h.request.HxBoosted) && !h.request.HxHistoryRestoreRequest
+}
+
 // Write writes the data to the connection as part of an HTTP reply.
 func (h *Handler) Write(data []byte) (n int, err error) {
 	return h.w.Write(data)
@@ -89,6 +110,12 @@ func (h *Handler) ReSwap(val string) {
 	h.response.Set(HXReswap, val)
 }
 
+// ReSwapWithObject allows you to specify how the response will be swapped. See hx-swap for possible values
+// https://htmx.org/attributes/hx-swap/
+func (h *Handler) ReSwapWithObject(s *Swap) {
+	h.ReSwap(s.String())
+}
+
 // ReTarget a CSS selector that updates the target of the content update to a different element on the page
 func (h *Handler) ReTarget(val string) {
 	h.response.Set(HXRetarget, val)
@@ -105,16 +132,34 @@ func (h *Handler) Trigger(val string) {
 	h.response.Set(HXTrigger, val)
 }
 
+// TriggerWithObject triggers events as soon as the response is received.
+// https://htmx.org/headers/hx-trigger/
+func (h *Handler) TriggerWithObject(t *Trigger) {
+	h.Trigger(t.String())
+}
+
 // TriggerAfterSettle trigger events after the settling step.
 // https://htmx.org/headers/hx-trigger/
 func (h *Handler) TriggerAfterSettle(val string) {
 	h.response.Set(HXTriggerAfterSettle, val)
 }
 
+// TriggerAfterSettleWithObject trigger events after the settling step.
+// https://htmx.org/headers/hx-trigger/
+func (h *Handler) TriggerAfterSettleWithObject(t *Trigger) {
+	h.TriggerAfterSettle(t.String())
+}
+
 // TriggerAfterSwap trigger events after the swap step.
 // https://htmx.org/headers/hx-trigger/
 func (h *Handler) TriggerAfterSwap(val string) {
 	h.response.Set(HXTriggerAfterSwap, val)
+}
+
+// TriggerAfterSwapWithObject trigger events after the swap step.
+// https://htmx.org/headers/hx-trigger/
+func (h *Handler) TriggerAfterSwapWithObject(t *Trigger) {
+	h.TriggerAfterSwap(t.String())
 }
 
 // Request returns the HxHeaders from the request
