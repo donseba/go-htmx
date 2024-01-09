@@ -1,6 +1,8 @@
 package htmx
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type (
 	HxResponseKey string
@@ -24,10 +26,20 @@ var (
 	HXTriggerAfterSwap   HxResponseKey = "HX-Trigger-After-Swap"   // allows you to trigger client side events, see the documentation for more info
 )
 
+func (h *HTMX) HxResponseHeader(headers http.Header) *HxResponseHeader {
+	return &HxResponseHeader{
+		headers: headers,
+	}
+}
+
 func (h HxResponseKey) String() string {
 	return string(h)
 }
 
 func (h *HxResponseHeader) Set(k HxResponseKey, val string) {
-	h.headers[k.String()] = []string{val}
+	h.headers.Set(k.String(), val)
+}
+
+func (h *HxResponseHeader) Get(k HxResponseKey) string {
+	return h.headers.Get(k.String())
 }

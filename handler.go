@@ -166,3 +166,8 @@ func (h *Handler) TriggerAfterSwapWithObject(t *Trigger) {
 func (h *Handler) Request() HxRequestHeader {
 	return h.request
 }
+
+// ResponseHeader returns the value of the response header
+func (h *Handler) ResponseHeader(header HxResponseKey) string {
+	return h.response.Get(header)
+}
