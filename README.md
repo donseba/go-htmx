@@ -65,7 +65,11 @@ func (a *App) Home(w http.ResponseWriter, r *http.Request) {
 	// initiate a new htmx handler
 	h := a.htmx.NewHandler(w, r)
 
-
+	// check if the request is a htmx request
+	if h.IsHxRequest() {
+		// do something
+	}
+	
 	// check if the request is boosted
 	if h.IsHxBoosted() {
 		// do something
