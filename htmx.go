@@ -1,3 +1,6 @@
+// Package htmx offers a streamlined integration with HTMX in Go applications.
+// It implements the standard io.Writer interface and includes middleware support, but it is not required.
+// Allowing for the effortless incorporation of HTMX features into existing Go applications.
 package htmx
 
 import (
@@ -21,12 +24,10 @@ func New() *HTMX {
 
 func (h *HTMX) NewHandler(w http.ResponseWriter, r *http.Request) *Handler {
 	return &Handler{
-		w:       w,
-		r:       r,
-		request: h.HxHeader(r.Context()),
-		response: &HxResponseHeader{
-			headers: w.Header(),
-		},
+		w:        w,
+		r:        r,
+		request:  h.HxHeader(r),
+		response: h.HxResponseHeader(w.Header()),
 	}
 }
 

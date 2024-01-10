@@ -64,6 +64,11 @@ func TestTransition(t *testing.T) {
 	if swap.transition == nil || *swap.transition != true {
 		t.Errorf("expected transition to be true, got %v", swap.transition)
 	}
+	expected := `innerHTML transition:true`
+	if swap.String() != expected {
+		t.Errorf("expected string output to be %s, got %s", expected, swap.String())
+	}
+
 }
 
 // TestIgnoreTitle tests the IgnoreTitle method
@@ -72,6 +77,11 @@ func TestIgnoreTitle(t *testing.T) {
 
 	if swap.ignoreTitle == nil || *swap.ignoreTitle != true {
 		t.Errorf("expected ignoreTitle to be true, got %v", swap.ignoreTitle)
+	}
+
+	expected := `innerHTML ignoreTitle:true`
+	if swap.String() != "innerHTML ignoreTitle:true" {
+		t.Errorf("expected string output to be %s, got %s", expected, swap.String())
 	}
 }
 

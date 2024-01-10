@@ -7,20 +7,13 @@ import (
 	"github.com/donseba/go-htmx"
 )
 
+// MiddleWare is a middleware that adds the htmx request header to the context
+// deprecated: htmx will retrieve the headers from the request by itself using htmx.NewHandler(w, r)
 func MiddleWare(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		hxh := htmx.HxRequestHeader{
-			HxBoosted:               htmx.HxStrToBool(r.Header.Get("HX-Boosted")),
-			HxCurrentURL:            r.Header.Get("HX-Current-URL"),
-			HxHistoryRestoreRequest: htmx.HxStrToBool(r.Header.Get("HX-History-Restore-Request")),
-			HxPrompt:                r.Header.Get("HX-Prompt"),
-			HxRequest:               htmx.HxStrToBool(r.Header.Get("HX-Request")),
-			HxTarget:                r.Header.Get("HX-Target"),
-			HxTriggerName:           r.Header.Get("HX-Trigger-Name"),
-			HxTrigger:               r.Header.Get("HX-Trigger"),
-		}
+		hxh := htmx.HxRequestHeaderFromRequest(r)
 
 		ctx = context.WithValue(ctx, htmx.ContextRequestHeader, hxh)
 

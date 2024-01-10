@@ -95,6 +95,51 @@ func (a *App) Home(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
+### HTMX Request Checks
+
+The htmx package provides several functions to determine the nature of HTMX requests in your Go application. These checks allow you to tailor the server's response based on specific HTMX-related conditions.
+
+#### IsHxRequest
+
+This function checks if the incoming HTTP request is made by HTMX.
+
+```go
+func (h *Handler) IsHxRequest() bool
+```
+**Usage**: Use this check to identify requests initiated by HTMX and differentiate them from standard HTTP requests.
+**Example**: Applying special handling or returning partial HTML snippets in response to an HTMX request.
+
+#### IsHxBoosted
+
+Determines if the HTMX request is boosted, which typically indicates an enhancement of the user experience with HTMX's AJAX capabilities.
+
+```go
+func (h *Handler) IsHxBoosted() bool
+```
+**Usage**: Useful in scenarios where you want to provide an enriched or different response for boosted requests.
+**Example**: Loading additional data or scripts that are specifically meant for AJAX-enhanced browsing.
+
+#### IsHxHistoryRestoreRequest
+
+Checks if the HTMX request is a history restore request. This type of request occurs when HTMX is restoring content from the browser's history.
+
+```go
+func (h *Handler) IsHxHistoryRestoreRequest() bool
+```
+
+**Usage**: Helps in handling scenarios where users navigate using browser history, and the application needs to restore previous states or content.
+**Example**: Resetting certain states or re-fetching data that was previously displayed.
+
+#### RenderPartial
+
+This function returns true for HTMX requests that are either standard or boosted, as long as they are not history restore requests. It is a combined check used to determine if a partial render is appropriate.
+
+```go
+func (h *Handler) RenderPartial() bool
+```
+**Usage**: Ideal for deciding when to render partial HTML content, which is a common pattern in applications using HTMX.
+**Example**: Returning only the necessary HTML fragments to update a part of the webpage, instead of rendering the entire page.
+
 ### Swapping
 Swapping is a way to replace the content of a dom element with the content of the response.
 This is done by setting the `HX-Swap` header to the id of the dom element you want to swap.
@@ -137,25 +182,33 @@ func (c *Controller) Route(w http.ResponseWriter, r *http.Request) {
 ```
 
 ## Middleware
-The htmx package is designed to work with middleware to catch the htmx headers and set them in the request context.
-This allows you to use the headers in your handlers.A middleware that works with the standard mux router is included in the package.
+The htmx package is designed for versatile integration into Go applications, providing support both with and without the use of middleware. Below, we showcase two examples demonstrating the package's usage in scenarios involving middleware.
+
+### standard mux middleware example:
+
+```go
+func MiddleWare(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		hxh := htmx.HxRequestHeaderFromRequest(c.Request())
+
+		ctx = context.WithValue(ctx, htmx.ContextRequestHeader, hxh)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+	return http.HandlerFunc(fn)
+}
+```
 
 ### echo middleware example: 
+
 ```go
 func MiddleWare(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 
-		hxh := htmx.HxHeaderRequest{
-			HxBoosted:               htmx.HxStrToBool(c.Request().Header.Get("HX-Boosted")),
-			HxCurrentURL:            c.Request().Header.Get("HX-Current-URL"),
-			HxHistoryRestoreRequest: htmx.HxStrToBool(c.Request().Header.Get("HX-History-Restore-Request")),
-			HxPrompt:                c.Request().Header.Get("HX-Prompt"),
-			HxRequest:               htmx.HxStrToBool(c.Request().Header.Get("HX-Request")),
-			HxTarget:                c.Request().Header.Get("HX-Target"),
-			HxTriggerName:           c.Request().Header.Get("HX-Trigger-Name"),
-			HxTrigger:               c.Request().Header.Get("HX-Trigger"),
-		}
+		hxh := htmx.HxRequestHeaderFromRequest(c.Request())
 
 		ctx = context.WithValue(ctx, htmx.ContextRequestHeader, hxh)
 
