@@ -12,6 +12,8 @@ import (
 var (
 	DefaultSwapDuration = time.Duration(0 * time.Millisecond)
 	DefaultSettleDelay  = time.Duration(20 * time.Millisecond)
+
+	DefaultNotificationKey = "showMessage"
 )
 
 type (
