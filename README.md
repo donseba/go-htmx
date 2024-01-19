@@ -181,6 +181,108 @@ func (c *Controller) Route(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
+## utility methods 
+
+### Notification handling 
+comprehensive support for triggering various types of notifications within your Go applications, enhancing user interaction and feedback. The package provides a set of functions to easily manage and trigger different notification types such as success, info, warning, error, and custom notifications.
+Available Notification Types
+
+- **Success**: Use for positive confirmation messages.
+- **Info**: Ideal for informational messages.
+- **Warning**: Suitable for cautionary messages.
+- **Error**: Use for error or failure messages.
+- **Custom**: Allows for defining your own notification types.
+
+### Usage
+
+Triggering notifications is straightforward. Here are some examples demonstrating how to use each function:
+
+```go
+func (h *Handler) MyHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	// Trigger a success notification 
+	h.TriggerSuccess("Operation completed successfully")
+	
+	// Trigger an info notification 
+	h.TriggerInfo("This is an informational message")
+
+	// Trigger a warning notification 
+	h.TriggerWarning("Warning: Please check your input")
+	
+	// Trigger an error notification 
+	h.TriggerError("Error: Unable to process your request")
+	
+	// Trigger a custom notification 
+	h.TriggerCustom("customType", "This is a custom notification", nil)
+}
+```
+
+### Notification Levels
+
+The htmx package provides built-in support for four primary notification levels, each representing a different type of message:
+
+- `success`: Indicates successful completion of an operation.
+- `info`: Conveys informational messages.
+- `warning`: Alerts about potential issues or cautionary information.
+- `error`: Signals an error or problem that occurred.
+
+Each notification type is designed to communicate specific kinds of messages clearly and effectively in your application's user interface.
+### Triggering Custom Notifications
+
+In addition to these standard notification levels, the htmx package also allows for custom notifications using the TriggerCustom method. This method provides the flexibility to define a custom level and message, catering to unique notification requirements.
+
+```go
+func (h *Handler) MyHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	// Trigger standard notifications 
+	h.TriggerSuccess("Operation successful")
+	h.TriggerInfo("This is for your information")
+	h.TriggerWarning("Please be cautious")
+	h.TriggerError("An error has occurred")
+	
+	// Trigger a custom notification 
+	h.TriggerCustom("customLevel", "This is a custom notification")
+}
+```
+The TriggerCustom method enables you to specify a custom level (e.g., "customLevel") and an accompanying message. This method is particularly useful when you need to go beyond the predefined notification types and implement a notification system that aligns closely with your application's specific context or branding.
+
+### Advanced Usage with Custom Variables
+
+You can also pass additional data with your notifications. Here's an example:
+
+```go
+func (h *Handler) MyHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	customData := map[string]string{"key1": "value1", "key2": "value2"}
+	h.TriggerInfo("User logged in", customData)
+}
+```
+
+### the HTMX part 
+
+please refer to the [htmx documentation](https://htmx.org/headers/hx-trigger/) regarding event triggering. and the example [confirmation UI](https://htmx.org/examples/confirm/)
+
+`HX-Trigger: {"showMessage":{"level" : "info", "message" : "Here Is A Message"}}`
+
+And handle this event like so:
+
+```js 
+document.body.addEventListener("showMessage", function(evt){
+    if(evt.detail.level === "info"){
+        alert(evt.detail.message);
+    }
+})
+```
+Each property of the JSON object on the right hand side will be copied onto the details object for the event.
+
+### Customizing Notification Event Names
+
+In addition to the standard notification types, the htmx package allows you to customize the event name used for triggering notifications. This is done by modifying the htmx.DefaultNotificationKey. Changing this key will affect the event name in the HTMX trigger, allowing you to tailor it to specific needs or naming conventions of your application.
+Setting a Custom Notification Key
+
+Before triggering notifications, you can set a custom event name as follows:
+
+```go
+htmx.DefaultNotificationKey = "myCustomEventName"
+```
+
 ## Middleware
 The htmx package is designed for versatile integration into Go applications, providing support both with and without the use of middleware. Below, we showcase two examples demonstrating the package's usage in scenarios involving middleware.
 
