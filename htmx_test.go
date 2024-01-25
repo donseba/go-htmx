@@ -103,6 +103,10 @@ func TestNew(t *testing.T) {
 	equalBool(t, req.HxHistoryRestoreRequest, handler.IsHxHistoryRestoreRequest())
 	equalBool(t, req.HxRequest, handler.IsHxRequest())
 
+	equalBool(t, req.HxBoosted, IsHxBoosted(r))
+	equalBool(t, req.HxHistoryRestoreRequest, IsHxHistoryRestoreRequest(r))
+	equalBool(t, req.HxRequest, IsHxRequest(r))
+
 	i, _ := handler.Write([]byte("hi"))
 	equalInt(t, 2, i)
 }

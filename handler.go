@@ -16,6 +16,7 @@ type (
 )
 
 const (
+	// StatusStopPolling is the status code that will stop htmx from polling
 	StatusStopPolling = 286
 )
 
