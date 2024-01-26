@@ -58,11 +58,7 @@ func RenderPartial(r *http.Request) bool {
 
 // HxStrToBool converts a string to a boolean value.
 func HxStrToBool(str string) bool {
-	if strings.EqualFold(str, "true") {
-		return true
-	}
-
-	return false
+	return strings.EqualFold(str, "true")
 }
 
 // HxBoolToStr converts a boolean value to a string.
