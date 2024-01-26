@@ -6,6 +6,7 @@
 [![Size](https://img.shields.io/github/languages/code-size/donseba/go-htmx)](https://github.com/donseba/go-htmx)
 [![License](https://img.shields.io/github/license/donseba/go-htmx)](./LICENSE)
 [![Stars](https://img.shields.io/github/stars/donseba/go-htmx)](https://github.com/donseba/go-htmx/stargazers)
+[![Go Report Card](https://goreportcard.com/badge/github.com/donseba/go-htmx)](https://goreportcard.com/report/github.com/donseba/go-htmx)
 
 ## Description
 
