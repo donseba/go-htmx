@@ -2,6 +2,7 @@ package htmx
 
 import (
 	"encoding/json"
+	"html/template"
 	"net/http"
 )
 
@@ -15,6 +16,7 @@ type (
 )
 
 const (
+	// StatusStopPolling is the status code that will stop htmx from polling
 	StatusStopPolling = 286
 )
 
@@ -42,6 +44,26 @@ func (h *Handler) RenderPartial() bool {
 // Write writes the data to the connection as part of an HTTP reply.
 func (h *Handler) Write(data []byte) (n int, err error) {
 	return h.w.Write(data)
+}
+
+// WriteHTML is a helper that writes HTML data to the connection.
+func (h *Handler) WriteHTML(html template.HTML) (n int, err error) {
+	return h.Write([]byte(html))
+}
+
+// WriteString is a helper that writes string data to the connection.
+func (h *Handler) WriteString(s string) (n int, err error) {
+	return h.Write([]byte(s))
+}
+
+// WriteJSON is a helper that writes json data to the connection.
+func (h *Handler) WriteJSON(data any) (n int, err error) {
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return 0, err
+	}
+
+	return h.Write(payload)
 }
 
 // WriteHeader sets the HTTP response header with the provided status code.

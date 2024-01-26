@@ -20,10 +20,12 @@ type (
 	HTMX struct{}
 )
 
+// New returns a new htmx instance.
 func New() *HTMX {
 	return &HTMX{}
 }
 
+// NewHandler returns a new htmx handler.
 func (h *HTMX) NewHandler(w http.ResponseWriter, r *http.Request) *Handler {
 	return &Handler{
 		w:        w,
@@ -33,14 +35,33 @@ func (h *HTMX) NewHandler(w http.ResponseWriter, r *http.Request) *Handler {
 	}
 }
 
-func HxStrToBool(str string) bool {
-	if strings.EqualFold(str, "true") {
-		return true
-	}
-
-	return false
+// IsHxRequest returns true if the request is a htmx request.
+func IsHxRequest(r *http.Request) bool {
+	return HxStrToBool(r.Header.Get(HxRequestHeaderRequest.String()))
 }
 
+// IsHxBoosted returns true if the request is a htmx request and the request is boosted
+func IsHxBoosted(r *http.Request) bool {
+	return HxStrToBool(r.Header.Get(HxRequestHeaderBoosted.String()))
+}
+
+// IsHxHistoryRestoreRequest returns true if the request is a htmx request and the request is a history restore request
+func IsHxHistoryRestoreRequest(r *http.Request) bool {
+	return HxStrToBool(r.Header.Get(HxRequestHeaderHistoryRestoreRequest.String()))
+}
+
+// RenderPartial returns true if the request is an HTMX request that is either boosted or a hx request,
+// provided it is not a history restore request.
+func RenderPartial(r *http.Request) bool {
+	return (IsHxRequest(r) || IsHxBoosted(r)) && !IsHxHistoryRestoreRequest(r)
+}
+
+// HxStrToBool converts a string to a boolean value.
+func HxStrToBool(str string) bool {
+	return strings.EqualFold(str, "true")
+}
+
+// HxBoolToStr converts a boolean value to a string.
 func HxBoolToStr(b bool) string {
 	if b {
 		return "true"

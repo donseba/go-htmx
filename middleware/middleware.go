@@ -15,6 +15,7 @@ func MiddleWare(next http.Handler) http.Handler {
 
 		hxh := htmx.HxRequestHeaderFromRequest(r)
 
+		//nolint:staticcheck
 		ctx = context.WithValue(ctx, htmx.ContextRequestHeader, hxh)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
