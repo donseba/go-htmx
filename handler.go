@@ -8,6 +8,7 @@ import (
 
 type (
 	Handler struct {
+		log      Logger
 		w        http.ResponseWriter
 		r        *http.Request
 		request  HxRequestHeader
@@ -64,6 +65,70 @@ func (h *Handler) WriteJSON(data any) (n int, err error) {
 	}
 
 	return h.Write(payload)
+}
+
+// JustWrite writes the data to the connection as part of an HTTP reply.
+func (h *Handler) JustWrite(data []byte) {
+	_, err := h.Write(data)
+	if err != nil {
+		h.log.Warn(err.Error())
+	}
+}
+
+// JustWriteHTML is a helper that writes HTML data to the connection.
+func (h *Handler) JustWriteHTML(html template.HTML) {
+	_, err := h.WriteHTML(html)
+	if err != nil {
+		h.log.Warn(err.Error())
+	}
+}
+
+// JustWriteString is a helper that writes string data to the connection.
+func (h *Handler) JustWriteString(s string) {
+	_, err := h.WriteString(s)
+	if err != nil {
+		h.log.Warn(err.Error())
+	}
+}
+
+// JustWriteJSON is a helper that writes json data to the connection.
+func (h *Handler) JustWriteJSON(data any) {
+	_, err := h.WriteJSON(data)
+	if err != nil {
+		h.log.Warn(err.Error())
+	}
+}
+
+// MustWrite writes the data to the connection as part of an HTTP reply.
+func (h *Handler) MustWrite(data []byte) {
+	_, err := h.Write(data)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// MustWriteHTML is a helper that writes HTML data to the connection.
+func (h *Handler) MustWriteHTML(html template.HTML) {
+	_, err := h.WriteHTML(html)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// MustWriteString is a helper that writes string data to the connection.
+func (h *Handler) MustWriteString(s string) {
+	_, err := h.WriteString(s)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// MustWriteJSON is a helper that writes json data to the connection.
+func (h *Handler) MustWriteJSON(data any) {
+	_, err := h.WriteJSON(data)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // WriteHeader sets the HTTP response header with the provided status code.

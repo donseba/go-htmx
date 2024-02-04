@@ -4,6 +4,7 @@
 package htmx
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -17,12 +18,25 @@ var (
 )
 
 type (
-	HTMX struct{}
+	Logger interface {
+		Warn(msg string, args ...any)
+	}
+
+	HTMX struct {
+		log Logger
+	}
 )
 
 // New returns a new htmx instance.
 func New() *HTMX {
-	return &HTMX{}
+	return &HTMX{
+		log: slog.Default().WithGroup("htmx"),
+	}
+}
+
+// SetLog sets the logger for the htmx instance.
+func (h *HTMX) SetLog(log Logger) {
+	h.log = log
 }
 
 // NewHandler returns a new htmx handler.
@@ -32,6 +46,7 @@ func (h *HTMX) NewHandler(w http.ResponseWriter, r *http.Request) *Handler {
 		r:        r,
 		request:  h.HxHeader(r),
 		response: h.HxResponseHeader(w.Header()),
+		log:      h.log,
 	}
 }
 
