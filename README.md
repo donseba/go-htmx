@@ -321,6 +321,67 @@ func MiddleWare(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 ```
+## Custom logger 
+
+In case you want to use a custom logger, like zap, you can inject them into the slog package like so:
+
+```go
+import (
+    "go.uber.org/zap"
+    "go.uber.org/zap/exp/zapslog"
+)
+
+func main() {
+    // create a new htmx instance with the logger
+    app := &App{
+        htmx: htmx.New(),
+    }
+
+    zapLogger := zap.Must(zap.NewProduction())
+    defer zapLogger.Sync()
+    
+    logger := slog.New(zapslog.NewHandler(zapLogger.Core(), nil))
+    
+    app.htmx.SetLog(logger)
+}
+```
+
+## Usage in other frameworks
+The htmx package is designed to be versatile and can be used in various Go web frameworks. 
+Below are examples of how to use the package in two popular Go web frameworks: Echo and Gin.
+
+### echo
+
+```go
+func (c *controller) Hello(c echo.Context) error {
+    // initiate a new htmx handler 
+    h := c.app.htmx.NewHandler(c.Response(), c.Request())
+    
+    // Example usage of Swap 
+    swap := htmx.NewSwap().Swap(time.Second * 2).ScrollBottom() 
+    
+    h.ReSwapWithObject(swap)
+    
+    _, _ = h.Write([]byte("your content"))
+}
+```
+
+### gin
+
+```go
+func (c *controller) Hello(c *gin.Context) {
+    // initiate a new htmx handler 
+    h := c.app.htmx.NewHandler(c.Writer, c.Request)
+    
+    // Example usage of Swap 
+    swap := htmx.NewSwap().Swap(time.Second * 2).ScrollBottom() 
+    
+    h.ReSwapWithObject(swap)
+    
+    _, _ = h.Write([]byte("your content"))
+}
+```
+
 
 ## Contributing
 
