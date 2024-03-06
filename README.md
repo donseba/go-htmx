@@ -382,6 +382,40 @@ func (c *controller) Hello(c *gin.Context) {
 }
 ```
 
+## Server Sent Events (SSE)
+
+The htmx package provides support for Server-Sent Events (SSE) in Go applications. This feature allows you to send real-time updates from the server to the client, enabling live updates and notifications in your web application.
+
+### Usage
+
+Create an endpoint in your Go application to handle SSE requests.
+```go
+func (a *App) SSE(w http.ResponseWriter, r *http.Request) {
+    cl := &client{
+        id: uuid.New().String()
+        ch: make(chan *htmx.SSEMessage),
+    }
+    
+    sseManager.Handle(w, cl)
+}
+```
+
+In order to send a message to the client, you can use the `Send` method on the `SSEManager` object.
+
+```go
+    go func() {
+        for {
+            // Send a message every seconds 
+            time.Sleep(1 * time.Second) 
+			
+            msg := htmx.
+                NewMessage(fmt.Sprintf("The current time is: %v", time.Now().Format(time.RFC850))).
+                WithEvent("Time")
+
+			sseManager.Send()
+		}
+	}()
+``` 
 
 ## Contributing
 
