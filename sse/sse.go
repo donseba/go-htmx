@@ -2,7 +2,6 @@ package sse
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"sync"
 	"time"
@@ -15,8 +14,7 @@ type Client interface {
 
 // Message defines the interface for  messages.
 type Message interface {
-	String() string      // Represent the message as a string for transmission.
-	HTML() template.HTML // Optionally, provide an HTML representation.
+	String() string // Represent the message as a string for transmission.
 }
 
 type TextMessage struct {
@@ -29,10 +27,6 @@ func NewMessage(data string) *TextMessage {
 	return &TextMessage{
 		Data: data,
 	}
-}
-
-func (m *TextMessage) HTML() template.HTML {
-	return template.HTML(m.Data)
 }
 
 func (m *TextMessage) String() string {
