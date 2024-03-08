@@ -4,6 +4,8 @@
 package htmx
 
 import (
+	"errors"
+	"github.com/donseba/go-htmx/sse"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -14,8 +16,12 @@ var (
 	DefaultSwapDuration = time.Duration(0 * time.Millisecond)
 	DefaultSettleDelay  = time.Duration(20 * time.Millisecond)
 
-	DefaultNotificationKey = "showMessage"
+	DefaultNotificationKey   = "showMessage"
+	DefaultSSEWorkerPoolSize = 5
 )
+
+// this is the default sseManager implementation which is created to handle the server-sent events.
+var sseManager sse.Manager
 
 type (
 	Logger interface {
@@ -48,6 +54,34 @@ func (h *HTMX) NewHandler(w http.ResponseWriter, r *http.Request) *Handler {
 		response: h.HxResponseHeader(w.Header()),
 		log:      h.log,
 	}
+}
+
+// NewSSE creates a new sse manager with the specified worker pool size.
+func (h *HTMX) NewSSE(workerPoolSize int) error {
+	if sseManager != nil {
+		return errors.New("sse manager already exists")
+	}
+
+	sseManager = sse.NewManager(workerPoolSize)
+	return nil
+}
+
+// SSEHandler handles the server-sent events. this is a shortcut and is not the preferred way to handle sse.
+func (h *HTMX) SSEHandler(w http.ResponseWriter, r *http.Request, cl sse.Listener) {
+	if sseManager == nil {
+		sseManager = sse.NewManager(DefaultSSEWorkerPoolSize)
+	}
+
+	sseManager.Handle(w, r, cl)
+}
+
+// SSESend sends a message to all connected clients.
+func (h *HTMX) SSESend(message sse.Envelope) {
+	if sseManager == nil {
+		sseManager = sse.NewManager(DefaultSSEWorkerPoolSize)
+	}
+
+	sseManager.Send(message)
 }
 
 // IsHxRequest returns true if the request is a htmx request.

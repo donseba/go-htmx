@@ -386,9 +386,11 @@ func (c *controller) Hello(c *gin.Context) {
 
 The htmx package provides support for Server-Sent Events (SSE) in Go applications. This feature allows you to send real-time updates from the server to the client, enabling live updates and notifications in your web application.
 
+You can read about this feature in the [htmx documentation](https://htmx.org/extensions/server-sent-events/) and the [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events).
+
 ### Usage
 
-Create an endpoint in your Go application to handle SSE requests.
+Create an endpoint in your Go application to handle SSE requests. (see the example for a better understanding)
 ```go
 func (a *App) SSE(w http.ResponseWriter, r *http.Request) {
     cl := &client{
@@ -408,7 +410,7 @@ In order to send a message to the client, you can use the `Send` method on the `
             // Send a message every seconds 
             time.Sleep(1 * time.Second) 
 			
-            msg := htmx.
+            msg := sse.
                 NewMessage(fmt.Sprintf("The current time is: %v", time.Now().Format(time.RFC850))).
                 WithEvent("Time")
 
@@ -416,6 +418,22 @@ In order to send a message to the client, you can use the `Send` method on the `
 		}
 	}()
 ``` 
+
+### HTMX helper methods 
+
+There are 2 helper methods to simplify the usage of SSE in your HTMX application.
+The Manager is created in the background and is not exposed to the user.
+You can change the default worker pool size by setting the `htmx.DefaultSSEWorkerPoolSize` variable.
+
+```go
+
+// SSEHandler handles the server-sent events. this is a shortcut and is not the preferred way to handle sse.
+func (h *HTMX) SSEHandler(w http.ResponseWriter, cl sse.Client)
+
+// SSESend sends a message to all connected clients.
+func (h *HTMX) SSESend(message sse.Envelope)
+
+```
 
 ## Contributing
 

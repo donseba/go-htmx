@@ -15,22 +15,10 @@ type (
 	App struct {
 		htmx *htmx.HTMX
 	}
-
-	client struct {
-		id string
-		ch chan sse.Message
-	}
 )
 
-func (c *client) ID() string {
-	return c.id
-}
-func (c *client) Chan() chan sse.Message {
-	return c.ch
-}
-
 var (
-	sseManager *sse.Manager
+	sseManager sse.Manager
 )
 
 func main() {
@@ -42,8 +30,21 @@ func main() {
 
 	go func() {
 		for {
+			time.Sleep(1 * time.Second) // Send a message every second
+			sseManager.Send(sse.NewMessage(fmt.Sprintf("<div>The current time is: %v</div>", time.Now().Format(time.RFC850))).WithEvent("time"))
+		}
+	}()
+
+	go func() {
+		for {
+			clientsStr := ""
+			clients := sseManager.Clients()
+			for _, c := range clients {
+				clientsStr += c + ", "
+			}
+
 			time.Sleep(1 * time.Second) // Send a message every seconds
-			sseManager.Send(sse.NewMessage(fmt.Sprintf("The current time is: %v", time.Now().Format(time.RFC850))).WithEvent("Time"))
+			sseManager.Send(sse.NewMessage(fmt.Sprintf("connected clients: %v", clientsStr)).WithEvent("clients"))
 		}
 	}()
 
@@ -66,12 +67,9 @@ func (a *App) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) SSE(w http.ResponseWriter, r *http.Request) {
-	cl := &client{
-		id: randStringRunes(10),
-		ch: make(chan sse.Message),
-	}
+	cl := sse.NewClient(randStringRunes(10))
 
-	sseManager.Handle(w, cl)
+	sseManager.Handle(w, r, cl)
 }
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")

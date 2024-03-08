@@ -8,7 +8,9 @@
         <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
     </head>
     <body>
-        <div hx-ext="sse" sse-connect="/sse" sse-swap="Time"></div>
+        <div hx-ext="sse" sse-connect="/sse" >
+            <div sse-swap="time" hx-swap="beforeend"></div>
+            <div sse-swap="clients" ></div>
+        </div>
     </body>
 </html>
-
