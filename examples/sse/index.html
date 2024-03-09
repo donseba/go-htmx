@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Server Sent Time Example</title>
+        <!-- Include HTMX -->
+        <script src="https://unpkg.com/htmx.org"></script>
+        <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
+    </head>
+    <body>
+        <div hx-ext="sse" sse-connect="/sse" >
+            <div sse-swap="time" hx-swap="beforeend"></div>
+            <div sse-swap="clients" ></div>
+        </div>
+    </body>
+</html>
