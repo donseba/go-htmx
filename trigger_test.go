@@ -52,9 +52,8 @@ func TestNewTriggerMixedNested(t *testing.T) {
 	trigger.AddEvent("foo").
 		AddEventDetailed("bar", "baz").
 		AddEventDetailed("qux", "quux").
-		AddEventObject("corge", map[string]any{"grault": "garply", "waldo": "fred", "plugh": "xyzzy", "thud": map[string]any{"foo": "bar", "baz": "qux"}})
-
-	expected := `{"bar":"baz","corge":{"grault":"garply","plugh":"xyzzy","thud":{"baz":"qux","foo":"bar"},"waldo":"fred"},"foo":"","qux":"quux"}`
+		AddEventObject("corge", map[string]any{"grault": "garply", "waldo": "fred", "plugh": "xyzzy", "thud": map[string]any{"foo": "bar", "baz": "qux"}}).AddSuccess("successfully tested", map[string]any{"foo": "bar", "baz": "qux"})
+	expected := `{"bar":"baz","corge":{"grault":"garply","plugh":"xyzzy","thud":{"baz":"qux","foo":"bar"},"waldo":"fred"},"foo":"","qux":"quux","showMessage":{"baz":"qux","foo":"bar","level":"success","message":"successfully tested"}}`
 
 	if trigger.String() != expected {
 		t.Errorf("expected trigger to be %v, got %v", expected, trigger.String())
