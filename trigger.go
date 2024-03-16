@@ -48,6 +48,42 @@ func (t *Trigger) AddEventObject(event string, details map[string]any) *Trigger 
 	return t.add(eventContent{event: event, data: details})
 }
 
+func (t *Trigger) AddSuccess(message string, vars ...map[string]any) {
+	t.addNotifyObject(notificationSuccess, message, vars...)
+}
+
+func (t *Trigger) AddInfo(message string, vars ...map[string]any) {
+	t.addNotifyObject(notificationInfo, message, vars...)
+}
+
+func (t *Trigger) AddWarning(message string, vars ...map[string]any) {
+	t.addNotifyObject(notificationWarning, message, vars...)
+}
+
+func (t *Trigger) AddError(message string, vars ...map[string]any) {
+	t.addNotifyObject(notificationError, message, vars...)
+}
+
+func (t *Trigger) addNotifyObject(nt notificationType, message string, vars ...map[string]any) *Trigger {
+	details := map[string]any{
+		notificationKeyLevel:   nt,
+		notificationKeyMessage: message,
+	}
+
+	if len(vars) > 0 {
+		for _, m := range vars {
+			for k, v := range m {
+				if k == notificationKeyLevel || k == notificationKeyMessage {
+					k = "_" + k
+				}
+				details[k] = v
+			}
+		}
+	}
+
+	return t.AddEventObject(DefaultNotificationKey, details)
+}
+
 // String returns the string representation of the Trigger set
 func (t *Trigger) String() string {
 	if t.onlySimple {
@@ -90,24 +126,7 @@ func (n *notificationType) String() string {
 }
 
 func (h *Handler) notifyObject(nt notificationType, message string, vars ...map[string]any) {
-	details := map[string]any{
-		notificationKeyLevel:   nt,
-		notificationKeyMessage: message,
-	}
-
-	if len(vars) > 0 {
-		for _, m := range vars {
-			for k, v := range m {
-				if k == notificationKeyLevel || k == notificationKeyMessage {
-					k = "_" + k
-				}
-				details[k] = v
-			}
-		}
-	}
-
-	t := NewTrigger().AddEventObject(DefaultNotificationKey, details)
-
+	t := NewTrigger().addNotifyObject(nt, message, vars...)
 	h.TriggerWithObject(t)
 }
 
