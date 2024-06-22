@@ -1,6 +1,7 @@
 package htmx
 
 import (
+	"context"
 	"encoding/json"
 	"html/template"
 	"net/http"
@@ -257,4 +258,38 @@ func (h *Handler) Request() HxRequestHeader {
 // ResponseHeader returns the value of the response header
 func (h *Handler) ResponseHeader(header HxResponseKey) string {
 	return h.response.Get(header)
+}
+
+// Render renders the given renderer with the given context and writes the output to the response writer
+func (h *Handler) Render(ctx context.Context, r RenderableComponent) (int, error) {
+	r.SetURL(h.r.URL)
+
+	output, err := r.Render(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// if it is a partial render, return the output directly
+	if h.RenderPartial() {
+		return h.WriteHTML(output)
+	}
+
+	// if the component is wrapped, we need to render all the partials inside out
+	if r.isWrapped() {
+		parent := r.wrapper()
+		parent.SetURL(h.r.URL)
+		parent.injectData(r.data())
+		parent.addPartial(r.target(), output)
+
+		// inject the output into the parent template
+		pOutput, pErr := parent.Render(ctx)
+		if pErr != nil {
+			return 0, pErr
+		}
+		// render the parent template
+		return h.WriteHTML(pOutput)
+	}
+
+	// render the output if it is not a partial render and not wrapped
+	return h.WriteHTML(output)
 }

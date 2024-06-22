@@ -19,6 +19,7 @@ It provides a set of tools to easily manage swap behaviors, trigger configuratio
 - **Trigger Management**: Define and manage triggers for HTMX events, supporting both simple and detailed triggers.
 - **Middleware Support**: Integrate HTMX seamlessly with Go middleware for easy HTMX header configuration.
 - **io.Writer Support**: The HTMX handler implements the io.Writer interface for easy integration with existing Go code.
+- **Component Rendering**: Render (partial) components in response to HTMX requests, enhancing user experience and performance.
 
 ## Getting Started
 
@@ -159,7 +160,6 @@ func (c *Controller) Route(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-
 ### Trigger Events 
 Trigger events are a way to trigger events on the dom element.
 This is done by setting the `HX-Trigger` header to the event you want to trigger.
@@ -283,6 +283,75 @@ Before triggering notifications, you can set a custom event name as follows:
 ```go
 htmx.DefaultNotificationKey = "myCustomEventName"
 ```
+
+## Component Rendering
+The Render method in the Handler struct allows for dynamic rendering of full or partial content based on the request type. 
+This flexibility is particularly useful for applications using HTMX, 
+enabling efficient updates of specific parts of a web page without requiring a full reload.
+
+Template Caching:
+Templates are cached by default to improve performance. 
+However, during development, you might want to disable this caching to see changes immediately. 
+You can control this behavior by setting the htmx.UseTemplateCache property to false.
+
+Example Usage:
+You can find a more detailed example in the examples/render folder in the repository. 
+Below is a simplified version to illustrate the main concept:
+
+```go 
+func (a *App) Home(w http.ResponseWriter, r *http.Request) {
+	h := a.htmx.NewHandler(w, r)
+
+	data := map[string]any{
+		"Title": "Super awesome example",
+		"Text": "Welcome to the home page",
+	}
+
+    sidebar := htmx.NewComponent("sidebar.html")
+    parent := htmx.NewComponent("index.html").SetData(data).With(sidebar, "Sidebar")
+	page := htmx.NewComponent("home.html").SetData(data).Wrap(parent, "Content")
+
+	_, err := h.Render(r.Context(), page)
+	if err != nil {
+		_ = fmt.Errorf("error rendering page: %v", err)
+	}
+}
+```
+
+### Adding Components
+To add a subcomponent to an existing component, use the With method. 
+This method allows you to embed components within other components, facilitating the construction of complex layouts. 
+For instance, you might add a sidebar to a main content area.
+
+### Wrapping Components
+The Wrap method is used to wrap one component within another. 
+This is particularly useful for handling different types of requests. 
+For example, when an HTMX request is detected, only the specific component is rendered. 
+For standard requests, the full page, including its layout and all subcomponents, is rendered. 
+This ensures efficient and contextually appropriate content delivery.
+
+### Passing Data to Components
+Data can be passed to components using the SetData method. 
+The data is accessible within the templates via the Data object, 
+allowing you to dynamically render content based on the provided data.
+
+```go 
+data := map[string]any{
+    "Title": "My Page",
+    "Content": "This is dynamic content",
+}
+
+component := htmx.NewComponent("template.html").SetData(data)
+```
+
+This method ensures that your components are flexible and can adapt to the data provided, making your templates more dynamic and reusable.
+
+### Summary
+
+- **Template Caching**: Enabled by default, can be disabled via htmx.UseTemplateCache.
+- **Adding Components**: Use the With method to embed subcomponents.
+- **Wrapping Components**: Use the Wrap method to manage partial and full page rendering.
+- **Passing Data**: Use the SetData method to pass dynamic data to templates.
 
 ## Middleware
 The htmx package is designed for versatile integration into Go applications, providing support both with and without the use of middleware. Below, we showcase two examples demonstrating the package's usage in scenarios involving middleware.
