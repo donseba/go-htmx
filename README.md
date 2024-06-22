@@ -303,11 +303,12 @@ func (a *App) Home(w http.ResponseWriter, r *http.Request) {
 	h := a.htmx.NewHandler(w, r)
 
 	data := map[string]any{
+		"Title": "Super awesome example",
 		"Text": "Welcome to the home page",
 	}
 
     sidebar := htmx.NewComponent("sidebar.html")
-    parent :=  htmx.NewComponent("index.html").SetData(data).With(sidebar, "Sidebar")
+    parent := htmx.NewComponent("index.html").SetData(data).With(sidebar, "Sidebar")
 	page := htmx.NewComponent("home.html").SetData(data).Wrap(parent, "Content")
 
 	_, err := h.Render(r.Context(), page)
