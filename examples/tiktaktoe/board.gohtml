@@ -1,0 +1,29 @@
+<table class="board">
+    {{ $hasWinner := false }}
+    {{ with .Data.winner }}
+        {{ $hasWinner = true }}
+        <tr>
+            <td colspan="3">
+                {{if eq . "X"}}Player <span class="X">X</span> wins!{{else if eq . "O"}}Player <span class="O">O</span> wins!{{else}}It's a draw!{{end}}
+            </td>
+        </tr>
+    {{else}}
+        <tr>
+            <td colspan="3" >
+                <span class="{{.Data.game.Turn }}">{{.Data.game.Turn }}</span>'s turn
+            </td>
+        </tr>
+    {{end}}
+
+    {{range $i, $row := .Data.game.Board }}
+        <tr>
+            {{range $j, $cell := $row}}
+                <td>
+                    <span {{ if eq $hasWinner false}}hx-put="/set/{{$i}}/{{$j}}" class="button {{$cell}}" {{else }}class="{{$cell}}"{{end}} hx-target=".board" hx-swap="outerHTML">
+                        {{$cell}}
+                    </span>
+                </td>
+            {{end}}
+        </tr>
+    {{end}}
+</table>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game with SSE</title>
+    <script src="https://unpkg.com/htmx.org@2.0.2"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        td {
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #000;
+            background-color: #ddd;
+        }
+        .snake {
+            background-color: #000;
+        }
+    </style>
+    <script>
+        function keyup(event) {
+            if (event.key === 'ArrowUp' || event.key === 'ArrowRight' || event.key === 'ArrowDown' || event.key === 'ArrowLeft') {
+                let direction;
+
+                if (event.key === 'ArrowUp') {
+                    direction = 'up';
+                } else if (event.key === 'ArrowRight') {
+                    direction = 'right';
+                } else if (event.key === 'ArrowDown') {
+                    direction = 'down';
+                } else if (event.key === 'ArrowLeft') {
+                    direction = 'left';
+                }
+
+                htmx.ajax('PUT', '/move/'+direction, '#dummy')
+            }
+
+            if (event.key === 'Space' || event.key === ' ' || event.key === 'p') {
+                htmx.ajax('PUT', '/pause', '#dummy')
+            }
+        }
+    </script>
+</head>
+<body hx-on:keyup="keyup(event)">
+    <span id="dummy"></span>
+    <h1 style="text-align: center;">Snake Game with SSE</h1>
+    <div sse-swap="board" hx-ext="sse" sse-connect="/sse">
+    {{ .Partials.board }}
+    </div>
+</body>
+</html>
