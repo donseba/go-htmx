@@ -269,27 +269,39 @@ func (h *Handler) Render(ctx context.Context, r RenderableComponent) (int, error
 		return 0, err
 	}
 
-	// if it is a partial render, return the output directly
+	// If it's a partial render, return the output directly
 	if h.RenderPartial() {
 		return h.WriteHTML(output)
 	}
 
-	// if the component is wrapped, we need to render all the partials inside out
-	if r.isWrapped() {
-		parent := r.wrapper()
-		parent.SetURL(h.r.URL)
-		parent.injectData(r.data())
-		parent.addPartial(r.target(), output)
-
-		// inject the output into the parent template
-		pOutput, pErr := parent.Render(ctx)
-		if pErr != nil {
-			return 0, pErr
-		}
-		// render the parent template
-		return h.WriteHTML(pOutput)
+	// Recursively wrap the output if the component is wrapped
+	output, err = h.wrapOutput(ctx, r, output)
+	if err != nil {
+		return 0, err
 	}
 
-	// render the output if it is not a partial render and not wrapped
+	// Write the final output
 	return h.WriteHTML(output)
+}
+
+// wrapOutput recursively wraps the output in its parent components
+func (h *Handler) wrapOutput(ctx context.Context, r RenderableComponent, output template.HTML) (template.HTML, error) {
+	if !r.isWrapped() {
+		// Base case: no more wrapping
+		return output, nil
+	}
+
+	parent := r.wrapper()
+	parent.SetURL(h.r.URL)
+	parent.injectData(r.data())
+	parent.addPartial(r.target(), output)
+
+	// Render the parent component
+	parentOutput, err := parent.Render(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	// Recursively wrap the parent output if the parent is also wrapped
+	return h.wrapOutput(ctx, parent, parentOutput)
 }
