@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/donseba/go-htmx"
-	"github.com/donseba/go-htmx/middleware"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/donseba/go-htmx"
 )
 
 type (
@@ -36,11 +36,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// wrap routes with the middleware
-	wrapRoutes(mux, middleware.MiddleWare, []route{
-		{path: "/", handler: http.HandlerFunc(app.Home)},
-		{path: "/search", handler: http.HandlerFunc(app.Search)},
-	})
+	mux.HandleFunc("GET /", app.Home)
+	mux.HandleFunc("POST /search", app.Search)
 
 	err := http.ListenAndServe(":3210", mux)
 	log.Fatal(err)
@@ -71,11 +68,4 @@ func (a *App) Search(w http.ResponseWriter, r *http.Request) {
 
 	result := `<img src="` + pokemon.Sprites.FrontDefault + `" alt="` + pokemon.Name + `">`
 	_, _ = w.Write([]byte(result))
-}
-
-// wrapRoutes takes a mux, middleware, and a list of routes to apply the middleware to.
-func wrapRoutes(mux *http.ServeMux, mw func(http.Handler) http.Handler, routes []route) {
-	for _, r := range routes {
-		mux.Handle(r.path, mw(r.handler))
-	}
 }

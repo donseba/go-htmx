@@ -13,13 +13,22 @@
 This repository contains the htmx Go package, designed to enhance server-side handling of HTML generated with the [HTMX library](https://htmx.org/). 
 It provides a set of tools to easily manage swap behaviors, trigger configurations, and other HTMX-related functionalities in a Go server environment.
 
+## Disclaimer
+This package is built around the specific need to be able to work with HTMX in a Go environment.
+All functionality found in this repository has a certain use case in various projects that I have worked on.
+
+- Design decisions are documented in the [DESIGN_DECISIONS.md](https://github.com/donseba/go-htmx/blob/main/DESIGN_DECISIONS.md) file.
+- Locality of Behavior is documented in the [LOB.md](https://github.com/donseba/go-htmx/blob/main/LOB.md) file.
+
 ## Features
 
+- **Component Rendering**: Render (partial) components in response to HTMX requests, enhancing user experience and performance.
 - **Swap Configuration**: Configure swap behaviors for HTMX responses, including style, timing, and scrolling.
 - **Trigger Management**: Define and manage triggers for HTMX events, supporting both simple and detailed triggers.
 - **Middleware Support**: Integrate HTMX seamlessly with Go middleware for easy HTMX header configuration.
 - **io.Writer Support**: The HTMX handler implements the io.Writer interface for easy integration with existing Go code.
-- **Component Rendering**: Render (partial) components in response to HTMX requests, enhancing user experience and performance.
+
+---
 
 ## Getting Started
 
@@ -42,7 +51,6 @@ import (
 	"net/http"
 
 	"github.com/donseba/go-htmx"
-	"github.com/donseba/go-htmx/middleware"
 )
 
 type App struct {
@@ -57,7 +65,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	// wrap the htmx example middleware around the http handler
-	mux.Handle("/", middleware.MiddleWare(http.HandlerFunc(app.Home)))
+	mux.HandleFunc("/", app.Home)
 
 	err := http.ListenAndServe(":3000", mux)
 	log.Fatal(err)
@@ -108,8 +116,8 @@ This function checks if the incoming HTTP request is made by HTMX.
 ```go
 func (h *Handler) IsHxRequest() bool
 ```
-**Usage**: Use this check to identify requests initiated by HTMX and differentiate them from standard HTTP requests.
-**Example**: Applying special handling or returning partial HTML snippets in response to an HTMX request.
+- **Usage**: Use this check to identify requests initiated by HTMX and differentiate them from standard HTTP requests.
+- **Example**: Applying special handling or returning partial HTML snippets in response to an HTMX request.
 
 #### IsHxBoosted
 
@@ -118,8 +126,8 @@ Determines if the HTMX request is boosted, which typically indicates an enhancem
 ```go
 func (h *Handler) IsHxBoosted() bool
 ```
-**Usage**: Useful in scenarios where you want to provide an enriched or different response for boosted requests.
-**Example**: Loading additional data or scripts that are specifically meant for AJAX-enhanced browsing.
+- **Usage**: Useful in scenarios where you want to provide an enriched or different response for boosted requests.
+- **Example**: Loading additional data or scripts that are specifically meant for AJAX-enhanced browsing.
 
 #### IsHxHistoryRestoreRequest
 
@@ -128,9 +136,8 @@ Checks if the HTMX request is a history restore request. This type of request oc
 ```go
 func (h *Handler) IsHxHistoryRestoreRequest() bool
 ```
-
-**Usage**: Helps in handling scenarios where users navigate using browser history, and the application needs to restore previous states or content.
-**Example**: Resetting certain states or re-fetching data that was previously displayed.
+- **Usage**: Helps in handling scenarios where users navigate using browser history, and the application needs to restore previous states or content.
+- **Example**: Resetting certain states or re-fetching data that was previously displayed.
 
 #### RenderPartial
 
@@ -139,8 +146,8 @@ This function returns true for HTMX requests that are either standard or boosted
 ```go
 func (h *Handler) RenderPartial() bool
 ```
-**Usage**: Ideal for deciding when to render partial HTML content, which is a common pattern in applications using HTMX.
-**Example**: Returning only the necessary HTML fragments to update a part of the webpage, instead of rendering the entire page.
+- **Usage**: Ideal for deciding when to render partial HTML content, which is a common pattern in applications using HTMX.
+- **Example**: Returning only the necessary HTML fragments to update a part of the webpage, instead of rendering the entire page.
 
 ### Swapping
 Swapping is a way to replace the content of a dom element with the content of the response.
@@ -172,20 +179,22 @@ func (c *Controller) Route(w http.ResponseWriter, r *http.Request) {
 	// Example usage of Swap 
 	trigger := htmx.NewTrigger().AddEvent("event1").AddEventDetailed("event2", "Hello, World!") 
 	
-	h.TriggerWithObject(swap)
+	h.TriggerWithObject(trigger)
 	// or 
-	h.TriggerAfterSettleWithObject(swap)
+	h.TriggerAfterSettleWithObject(trigger)
 	// or
-	h.TriggerAfterSwapWithObject(swap)
+	h.TriggerAfterSwapWithObject(trigger)
 	
 	_, _ = h.Write([]byte("your content"))
 }
 ```
 
+---
+
 ## utility methods 
 
 ### Notification handling 
-comprehensive support for triggering various types of notifications within your Go applications, enhancing user interaction and feedback. The package provides a set of functions to easily manage and trigger different notification types such as success, info, warning, error, and custom notifications.
+Comprehensive support for triggering various types of notifications within your Go applications, enhancing user interaction and feedback. The package provides a set of functions to easily manage and trigger different notification types such as success, info, warning, error, and custom notifications.
 Available Notification Types
 
 - **Success**: Use for positive confirmation messages.
@@ -284,74 +293,13 @@ Before triggering notifications, you can set a custom event name as follows:
 htmx.DefaultNotificationKey = "myCustomEventName"
 ```
 
+---
+
 ## Component Rendering
-The Render method in the Handler struct allows for dynamic rendering of full or partial content based on the request type. 
-This flexibility is particularly useful for applications using HTMX, 
-enabling efficient updates of specific parts of a web page without requiring a full reload.
 
-Template Caching:
-Templates are cached by default to improve performance. 
-However, during development, you might want to disable this caching to see changes immediately. 
-You can control this behavior by setting the htmx.UseTemplateCache property to false.
+The components documentation can be found in the [COMPONENTS.md](https://github.com/donseba/go-htmx/blob/main/COMPONENTS.md) file.
 
-Example Usage:
-You can find a more detailed example in the examples/render folder in the repository. 
-Below is a simplified version to illustrate the main concept:
-
-```go 
-func (a *App) Home(w http.ResponseWriter, r *http.Request) {
-	h := a.htmx.NewHandler(w, r)
-
-	data := map[string]any{
-		"Title": "Super awesome example",
-		"Text": "Welcome to the home page",
-	}
-
-    sidebar := htmx.NewComponent("sidebar.html")
-    parent := htmx.NewComponent("index.html").SetData(data).With(sidebar, "Sidebar")
-	page := htmx.NewComponent("home.html").SetData(data).Wrap(parent, "Content")
-
-	_, err := h.Render(r.Context(), page)
-	if err != nil {
-		_ = fmt.Errorf("error rendering page: %v", err)
-	}
-}
-```
-
-### Adding Components
-To add a subcomponent to an existing component, use the With method. 
-This method allows you to embed components within other components, facilitating the construction of complex layouts. 
-For instance, you might add a sidebar to a main content area.
-
-### Wrapping Components
-The Wrap method is used to wrap one component within another. 
-This is particularly useful for handling different types of requests. 
-For example, when an HTMX request is detected, only the specific component is rendered. 
-For standard requests, the full page, including its layout and all subcomponents, is rendered. 
-This ensures efficient and contextually appropriate content delivery.
-
-### Passing Data to Components
-Data can be passed to components using the SetData method. 
-The data is accessible within the templates via the Data object, 
-allowing you to dynamically render content based on the provided data.
-
-```go 
-data := map[string]any{
-    "Title": "My Page",
-    "Content": "This is dynamic content",
-}
-
-component := htmx.NewComponent("template.html").SetData(data)
-```
-
-This method ensures that your components are flexible and can adapt to the data provided, making your templates more dynamic and reusable.
-
-### Summary
-
-- **Template Caching**: Enabled by default, can be disabled via htmx.UseTemplateCache.
-- **Adding Components**: Use the With method to embed subcomponents.
-- **Wrapping Components**: Use the Wrap method to manage partial and full page rendering.
-- **Passing Data**: Use the SetData method to pass dynamic data to templates.
+---
 
 ## Middleware
 The htmx package is designed for versatile integration into Go applications, providing support both with and without the use of middleware. Below, we showcase two examples demonstrating the package's usage in scenarios involving middleware.
@@ -360,18 +308,21 @@ The htmx package is designed for versatile integration into Go applications, pro
 
 ```go
 func MiddleWare(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+    fn := func(w http.ResponseWriter, r *http.Request) {
+        ctx := r.Context()
 
-		hxh := htmx.HxRequestHeaderFromRequest(c.Request())
+        hxh := htmx.HxRequestHeaderFromRequest(c.Request())
 
-		ctx = context.WithValue(ctx, htmx.ContextRequestHeader, hxh)
+        ctx = context.WithValue(ctx, htmx.ContextRequestHeader, hxh)
 
-		next.ServeHTTP(w, r.WithContext(ctx))
-	}
-	return http.HandlerFunc(fn)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    }
+    return http.HandlerFunc(fn)
 }
 ```
+
+**NOTE** : The `MiddleWare` function is deprecated but will remain as a reference for users who prefer to use it.
+It would be best to create your own middleware function that fits your application's requirements.
 
 ### echo middleware example: 
 
@@ -390,6 +341,9 @@ func MiddleWare(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 ```
+
+--- 
+
 ## Custom logger 
 
 In case you want to use a custom logger, like zap, you can inject them into the slog package like so:
@@ -414,6 +368,8 @@ func main() {
     app.htmx.SetLog(logger)
 }
 ```
+
+--- 
 
 ## Usage in other frameworks
 The htmx package is designed to be versatile and can be used in various Go web frameworks. 
@@ -451,6 +407,8 @@ func (c *controller) Hello(c *gin.Context) {
 }
 ```
 
+--- 
+
 ## Server Sent Events (SSE)
 
 The htmx package provides support for Server-Sent Events (SSE) in Go applications. This feature allows you to send real-time updates from the server to the client, enabling live updates and notifications in your web application.
@@ -471,26 +429,26 @@ func (a *App) SSE(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-In order to send a message to the client, you can use the `Send` method on the `SSEManager` object.
+To send a message to the client, you can use the `Send` method on the `SSEManager` object.
 
 ```go
-    go func() {
-        for {
-            // Send a message every seconds 
-            time.Sleep(1 * time.Second) 
+go func() {
+    for {
+        // Send a message every seconds 
+        time.Sleep(1 * time.Second) 
 			
-            msg := sse.
-                NewMessage(fmt.Sprintf("The current time is: %v", time.Now().Format(time.RFC850))).
-                WithEvent("Time")
-
-			sseManager.Send()
-		}
-	}()
+        msg := sse.
+            NewMessage(fmt.Sprintf("The current time is: %v", time.Now().Format(time.RFC850))).
+            WithEvent("Time")
+            
+        sseManager.Send()
+    }
+}()
 ``` 
 
 ### HTMX helper methods 
 
-There are 2 helper methods to simplify the usage of SSE in your HTMX application.
+There are two helper methods to simplify the usage of SSE in your HTMX application.
 The Manager is created in the background and is not exposed to the user.
 You can change the default worker pool size by setting the `htmx.DefaultSSEWorkerPoolSize` variable.
 
@@ -503,6 +461,7 @@ func (h *HTMX) SSEHandler(w http.ResponseWriter, cl sse.Client)
 func (h *HTMX) SSESend(message sse.Envelope)
 
 ```
+--- 
 
 ## Contributing
 
@@ -516,6 +475,8 @@ If you have a suggestion that would make this better, please fork the repo and c
 2. Create a new branch with `main` as the base branch
 3. Add your changes
 4. Raise a Pull Request
+
+--- 
 
 ## License
 

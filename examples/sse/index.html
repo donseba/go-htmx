@@ -4,12 +4,12 @@
         <meta charset="UTF-8">
         <title>Server Sent Time Example</title>
         <!-- Include HTMX -->
-        <script src="https://unpkg.com/htmx.org"></script>
-        <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
+        <script src="https://unpkg.com/htmx.org@2.0.2"></script>
+        <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
     </head>
     <body>
         <div hx-ext="sse" sse-connect="/sse" >
-            <div sse-swap="time" hx-swap="beforeend"></div>
+            <div sse-swap="time"></div>
             <div sse-swap="clients" ></div>
         </div>
     </body>

@@ -3,9 +3,14 @@ package htmx
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"html/template"
 	"net/url"
 	"path/filepath"
+	"sort"
+	"strings"
 	"sync"
 )
 
@@ -25,14 +30,14 @@ type (
 		AddData(key string, value any) RenderableComponent
 		SetGlobalData(input map[string]any) RenderableComponent
 		AddGlobalData(key string, value any) RenderableComponent
-
 		AddTemplateFunction(name string, function interface{}) RenderableComponent
 		AddTemplateFunctions(funcs template.FuncMap) RenderableComponent
-
 		SetURL(url *url.URL)
+		Reset() *Component
 
 		data() map[string]any
 		injectData(input map[string]any)
+		injectGlobalData(input map[string]any)
 		addPartial(key string, value any)
 		partials() map[string]RenderableComponent
 		isWrapped() bool
@@ -67,9 +72,17 @@ func NewComponent(templates ...string) *Component {
 // it has all the default template functions and the additional template functions
 // that are added with AddTemplateFunction
 func (c *Component) Render(ctx context.Context) (template.HTML, error) {
+	// Check for circular references
+	if ctx.Value(c) != nil {
+		return "", errors.New("circular reference detected in partials")
+	}
+
+	// Add current component to context
+	ctx = context.WithValue(ctx, c, true)
+
 	for key, value := range c.partials() {
-		value.SetURL(c.url)
 		value.injectData(c.templateData)
+		value.injectGlobalData(c.globalData)
 
 		ch, err := value.Render(ctx)
 		if err != nil {
@@ -80,7 +93,7 @@ func (c *Component) Render(ctx context.Context) (template.HTML, error) {
 
 	//get the name of the first template file
 	if len(c.templates) == 0 {
-		return "", nil
+		return "", errors.New("no templates provided for rendering")
 	}
 
 	return c.renderNamed(ctx, filepath.Base(c.templates[0]), c.templates, c.templateData)
@@ -95,20 +108,26 @@ func (c *Component) renderNamed(ctx context.Context, name string, templates []st
 	}
 
 	var err error
-	// Cache template parsing
-	tmpl, cached := templateCache.Load(templates[0])
-	if !cached || !UseTemplateCache {
-		var functions = DefaultTemplateFuncs
-		if c.functions != nil {
-			for key, value := range c.functions {
-				functions[key] = value
-			}
+	functions := make(template.FuncMap)
+	for key, value := range DefaultTemplateFuncs {
+		functions[key] = value
+	}
+
+	if c.functions != nil {
+		for key, value := range c.functions {
+			functions[key] = value
 		}
+	}
+
+	cacheKey := generateCacheKey(templates, functions)
+	tmpl, cached := templateCache.Load(cacheKey)
+	if !cached || !UseTemplateCache {
+		// Parse and cache template as before
 		tmpl, err = template.New(name).Funcs(functions).ParseFiles(templates...)
 		if err != nil {
 			return "", err
 		}
-		templateCache.Store(templates[0], tmpl)
+		templateCache.Store(cacheKey, tmpl)
 	}
 
 	data := struct {
@@ -125,13 +144,17 @@ func (c *Component) renderNamed(ctx context.Context, name string, templates []st
 		URL:      c.url,
 	}
 
-	var buf bytes.Buffer
-	err = tmpl.(*template.Template).Execute(&buf, data)
-	if err != nil {
-		return "", err
+	if t, ok := tmpl.(*template.Template); ok {
+		var buf bytes.Buffer
+		err = t.Execute(&buf, data)
+		if err != nil {
+			return "", err
+		}
+
+		return template.HTML(buf.String()), nil // Return rendered content
 	}
 
-	return template.HTML(buf.String()), nil
+	return "", errors.New("template is not a *template.Template")
 }
 
 // Wrap wraps the component with the given renderer
@@ -144,6 +167,14 @@ func (c *Component) Wrap(renderer RenderableComponent, target string) Renderable
 
 // With adds a partial to the component
 func (c *Component) With(r RenderableComponent, target string) RenderableComponent {
+	if c.with == nil {
+		c.with = make(map[string]RenderableComponent)
+	}
+
+	if c.url != nil {
+		r.SetURL(c.url)
+	}
+
 	c.with[target] = r
 
 	return c
@@ -151,17 +182,29 @@ func (c *Component) With(r RenderableComponent, target string) RenderableCompone
 
 // Attach adds a template to the main component but doesn't pre-render it
 func (c *Component) Attach(target string) RenderableComponent {
+	if c.templates == nil {
+		c.templates = make([]string, 0)
+	}
+
 	c.templates = append(c.templates, target)
 	return c
 }
 
 func (c *Component) AddTemplateFunction(name string, function interface{}) RenderableComponent {
+	if c.functions == nil {
+		c.functions = make(template.FuncMap)
+	}
+
 	c.functions[name] = function
 
 	return c
 }
 
 func (c *Component) AddTemplateFunctions(funcs template.FuncMap) RenderableComponent {
+	if c.functions == nil {
+		c.functions = make(template.FuncMap)
+	}
+
 	for key, value := range funcs {
 		c.functions[key] = value
 	}
@@ -170,12 +213,20 @@ func (c *Component) AddTemplateFunctions(funcs template.FuncMap) RenderableCompo
 }
 
 func (c *Component) SetGlobalData(input map[string]any) RenderableComponent {
+	if c.globalData == nil {
+		c.globalData = make(map[string]any)
+	}
+
 	c.globalData = input
 
 	return c
 }
 
 func (c *Component) AddGlobalData(key string, value any) RenderableComponent {
+	if c.globalData == nil {
+		c.globalData = make(map[string]any)
+	}
+
 	c.globalData[key] = value
 
 	return c
@@ -183,12 +234,20 @@ func (c *Component) AddGlobalData(key string, value any) RenderableComponent {
 
 // SetData adds data to the component
 func (c *Component) SetData(input map[string]any) RenderableComponent {
+	if c.templateData == nil {
+		c.templateData = make(map[string]any)
+	}
+
 	c.templateData = input
 
 	return c
 }
 
 func (c *Component) AddData(key string, value any) RenderableComponent {
+	if c.templateData == nil {
+		c.templateData = make(map[string]any)
+	}
+
 	c.templateData[key] = value
 
 	return c
@@ -196,6 +255,11 @@ func (c *Component) AddData(key string, value any) RenderableComponent {
 
 func (c *Component) SetURL(url *url.URL) {
 	c.url = url
+
+	// Recursively set the URL for all partials
+	for _, partial := range c.with {
+		partial.SetURL(url)
+	}
 }
 
 // isWrapped returns true if the component is wrapped
@@ -228,6 +292,10 @@ func (c *Component) injectData(input map[string]any) {
 }
 
 func (c *Component) injectGlobalData(input map[string]any) {
+	if c.globalData == nil {
+		c.globalData = make(map[string]any)
+	}
+
 	for key, value := range input {
 		if _, ok := c.globalData[key]; !ok {
 			c.globalData[key] = value
@@ -243,4 +311,26 @@ func (c *Component) addPartial(key string, value any) {
 // data returns the template data
 func (c *Component) data() map[string]any {
 	return c.templateData
+}
+
+func (c *Component) Reset() *Component {
+	c.templateData = make(map[string]any)
+	c.globalData = make(map[string]any)
+	c.partial = make(map[string]any)
+	c.with = make(map[string]RenderableComponent)
+	c.url = nil
+
+	return c
+}
+
+// Generate a hash of the function names to include in the cache key
+func generateCacheKey(templates []string, funcs template.FuncMap) string {
+	var funcNames []string
+	for name := range funcs {
+		funcNames = append(funcNames, name)
+	}
+	// Sort function names to ensure consistent ordering
+	sort.Strings(funcNames)
+	hash := sha256.Sum256([]byte(strings.Join(funcNames, ",")))
+	return templates[0] + ":" + hex.EncodeToString(hash[:])
 }
