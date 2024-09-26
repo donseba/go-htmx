@@ -1,0 +1,13 @@
+<table>
+    <tbody>
+    {{range $i, $row := .Data.game.Board }}
+        <tr>
+            {{range $j, $cell := $row}}
+                <td>
+                    {{ $cell }}
+                </td>
+            {{end}}
+        </tr>
+    {{end}}
+    </tbody>
+</table>
