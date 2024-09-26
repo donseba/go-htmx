@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/donseba/go-htmx"
-	"github.com/donseba/go-htmx/middleware"
 	"log"
 	"net/http"
+
+	"github.com/donseba/go-htmx"
 )
 
 type (
@@ -29,11 +29,8 @@ func main() {
 
 	htmx.UseTemplateCache = false
 
-	// wrap routes with the middleware
-	wrapRoutes(mux, middleware.MiddleWare, []route{
-		{path: "/", handler: http.HandlerFunc(app.Home)},
-		{path: "/child", handler: http.HandlerFunc(app.Child)},
-	})
+	http.HandleFunc("/", app.Home)
+	http.HandleFunc("/child", app.Child)
 
 	err := http.ListenAndServe(":3210", mux)
 	log.Fatal(err)
@@ -85,11 +82,4 @@ func mainContent() htmx.RenderableComponent {
 
 	sidebar := htmx.NewComponent("sidebar.html")
 	return htmx.NewComponent("index.html").SetData(data).With(sidebar, "Sidebar")
-}
-
-// wrapRoutes takes a mux, middleware, and a list of routes to apply the middleware to.
-func wrapRoutes(mux *http.ServeMux, mw func(http.Handler) http.Handler, routes []route) {
-	for _, r := range routes {
-		mux.Handle(r.path, mw(r.handler))
-	}
 }

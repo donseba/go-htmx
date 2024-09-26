@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/donseba/go-htmx"
-	"github.com/donseba/go-htmx/sse"
 	"html/template"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/donseba/go-htmx"
+	"github.com/donseba/go-htmx/sse"
 )
 
 type (
