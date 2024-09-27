@@ -29,8 +29,8 @@ func main() {
 
 	htmx.UseTemplateCache = false
 
-	http.HandleFunc("/", app.Home)
-	http.HandleFunc("/child", app.Child)
+	mux.HandleFunc("/", app.Home)
+	mux.HandleFunc("/child", app.Child)
 
 	err := http.ListenAndServe(":3210", mux)
 	log.Fatal(err)
