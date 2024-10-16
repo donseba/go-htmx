@@ -272,25 +272,3 @@ func (h *Handler) Render(ctx context.Context, r RenderableComponent) (int, error
 	// Write the final output
 	return h.WriteHTML(output)
 }
-
-// wrapOutput recursively wraps the output in its parent components
-func (h *Handler) wrapOutput(ctx context.Context, r RenderableComponent, output template.HTML) (template.HTML, error) {
-	if !r.isWrapped() {
-		// Base case: no more wrapping
-		return output, nil
-	}
-
-	parent := r.wrapper()
-	parent.SetURL(h.r.URL)
-	parent.injectData(r.data())
-	parent.addPartial(r.target(), output)
-
-	// Render the parent component
-	parentOutput, err := parent.Render(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	// Recursively wrap the parent output if the parent is also wrapped
-	return h.wrapOutput(ctx, parent, parentOutput)
-}
