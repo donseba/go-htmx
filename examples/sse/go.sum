@@ -1,1 +1,4 @@
+github.com/donseba/go-htmx v1.9.0 h1:8EegtV7Nr8R6RvD6gZc7rqqzVD3r82XTa+VMUOqQzDo=
 github.com/donseba/go-htmx v1.9.0/go.mod h1:8PTAYvNKf8+QYis+DpAsggKz+sa2qljtMgvdAeNBh5s=
+github.com/donseba/go-htmx v1.11.3 h1:YW1JiKImneilQ73r+8xnoTlftlxt2Rh9L3IoZSa5iXk=
+github.com/donseba/go-htmx v1.11.3/go.mod h1:8PTAYvNKf8+QYis+DpAsggKz+sa2qljtMgvdAeNBh5s=

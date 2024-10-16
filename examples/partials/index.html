@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Data.Title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+</head>
+<body class="bg-gray-200 p-10">
+    <div class="max-w-xl mx-auto ">
+        <h1 class="text-3xl mb-5 flex justify-center"><span>partial and full page loading example</span></h1>
+
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full" hx-get="/" hx-target="#block1">Load Block 1</button>
+                <div class="pt-4" id="block1">
+                    {{ .Partials.block1 }}
+                </div>
+            </div>
+
+            <div>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full" hx-get="/" hx-target="#block2">Load Block 2</button>
+                <div class="pt-4" id="block2">
+                    {{ .Partials.block2 }}
+                </div>
+            </div>
+
+            <div>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full" hx-get="/" hx-target="#block3">Load Block 3</button>
+                <div class="pt-4" id="block3">
+                    {{ .Partials.block3 }}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

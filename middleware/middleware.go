@@ -13,7 +13,7 @@ func MiddleWare(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		hxh := htmx.HxRequestHeaderFromRequest(r)
+		r, hxh := htmx.HxRequestHeaderFromRequest(r)
 
 		//nolint:staticcheck
 		ctx = context.WithValue(ctx, htmx.ContextRequestHeader, hxh)

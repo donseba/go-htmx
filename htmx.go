@@ -5,11 +5,12 @@ package htmx
 
 import (
 	"errors"
-	"github.com/donseba/go-htmx/sse"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/donseba/go-htmx/sse"
 )
 
 var (
@@ -47,10 +48,12 @@ func (h *HTMX) SetLog(log Logger) {
 
 // NewHandler returns a new htmx handler.
 func (h *HTMX) NewHandler(w http.ResponseWriter, r *http.Request) *Handler {
+	r, requestHeader := h.HxHeader(r)
+
 	return &Handler{
 		w:        w,
 		r:        r,
-		request:  h.HxHeader(r),
+		request:  requestHeader,
 		response: h.HxResponseHeader(w.Header()),
 		log:      h.log,
 	}

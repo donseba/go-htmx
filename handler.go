@@ -264,44 +264,11 @@ func (h *Handler) ResponseHeader(header HxResponseKey) string {
 func (h *Handler) Render(ctx context.Context, r RenderableComponent) (int, error) {
 	r.SetURL(h.r.URL)
 
-	output, err := r.Render(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	// If it's a partial render, return the output directly
-	if h.RenderPartial() {
-		return h.WriteHTML(output)
-	}
-
-	// Recursively wrap the output if the component is wrapped
-	output, err = h.wrapOutput(ctx, r, output)
+	output, err := r.RenderWithRequest(ctx, h.r)
 	if err != nil {
 		return 0, err
 	}
 
 	// Write the final output
 	return h.WriteHTML(output)
-}
-
-// wrapOutput recursively wraps the output in its parent components
-func (h *Handler) wrapOutput(ctx context.Context, r RenderableComponent, output template.HTML) (template.HTML, error) {
-	if !r.isWrapped() {
-		// Base case: no more wrapping
-		return output, nil
-	}
-
-	parent := r.wrapper()
-	parent.SetURL(h.r.URL)
-	parent.injectData(r.data())
-	parent.addPartial(r.target(), output)
-
-	// Render the parent component
-	parentOutput, err := parent.Render(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	// Recursively wrap the parent output if the parent is also wrapped
-	return h.wrapOutput(ctx, parent, parentOutput)
 }

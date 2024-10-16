@@ -72,8 +72,6 @@ func (m *Message) String() string {
 	}
 	sb.WriteString(fmt.Sprintf("data: %v\n\n", m.Data))
 
-	fmt.Println(sb.String())
-
 	return sb.String()
 }
 
@@ -117,6 +115,15 @@ func (manager *broadcastManager) Handle(w http.ResponseWriter, r *http.Request, 
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
+	// Create a ResponseController from the ResponseWriter
+	rc := http.NewResponseController(w)
+
+	// Flush the headers to the client
+	if err := rc.Flush(); err != nil {
+		http.Error(w, "Error flushing response", http.StatusInternalServerError)
+		return
+	}
+
 	// Send history to the newly connected client
 	manager.messageHistory.Send(cl)
 
@@ -132,10 +139,11 @@ func (manager *broadcastManager) Handle(w http.ResponseWriter, r *http.Request, 
 				// If an error occurs (e.g., client has disconnected), return from the function
 				return
 			}
-			if flusher, ok := w.(http.Flusher); ok {
-				flusher.Flush()
-			}
 
+			if err = rc.Flush(); err != nil {
+				http.Error(w, "Error flushing response", http.StatusInternalServerError)
+				return
+			}
 		case <-r.Context().Done():
 			manager.unregister(cl.ID())
 			close(cl.Chan())

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Server Sent Time Example</title>
+    <!-- Include HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.2"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+    <script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>
+</head>
+<body>
+<div class="empty"></div>
+
+<div  >
+    <select name="Color" id="colorSelect">
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+        <option value="blue">Blue</option>
+        <option value="yellow">Yellow</option>
+        <option value="purple">Purple</option>
+        <option value="orange">Orange</option>
+    </select>
+
+    <div hx-ext="sse" sse-connect="/sse">
+        {{ $row := 0 }}
+        <div style="overflow: hidden; height: 10px;">
+        {{ range $key, $colors := .Data.Game.Colors }}
+            {{ if ne $key $row}}
+            {{ $row = $key }}
+            </div>
+            <div style="overflow: hidden; height: 10px;">
+            {{ end}}
+                {{ range $colorKey, $color := $colors }}
+                <div hx-post="/"
+                        hx-ext="json-enc"
+                        sse-swap="color{{$key}}{{$colorKey}}"
+                        hx-vals='{ "X":{{ $key }} ,"Y":{{ $colorKey }},"SelectedColor": "" }'
+                        style='background-color: {{ safe $color }}; width: 10px; height: 10px; float:left; cursor: pointer;'
+                        onclick="updateButtonColor(this)"></div>
+                {{ end }}
+        {{ end }}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Function to update hx-vals with selected color
+    function updateButtonColor(button) {
+        var selectedColor = document.getElementById('colorSelect').value;
+        var hxVals = JSON.parse(button.getAttribute('hx-vals'));
+        hxVals.SelectedColor = selectedColor;
+        button.setAttribute('hx-vals', JSON.stringify(hxVals));
+    }
+</script>
+
+</body>
+</html>
