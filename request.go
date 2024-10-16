@@ -7,7 +7,7 @@ import (
 
 const (
 	// ContextRequestHeader is the context key for the htmx request header.
-	ContextRequestHeader = "htmx-request-header"
+	ContextRequestHeader ContextRequestHeaderKey = "htmx-request-header"
 
 	HxRequestHeaderBoosted               HxRequestHeaderKey = "HX-Boosted"
 	HxRequestHeaderCurrentURL            HxRequestHeaderKey = "HX-Current-URL"
@@ -20,7 +20,8 @@ const (
 )
 
 type (
-	HxRequestHeaderKey string
+	ContextRequestHeaderKey string
+	HxRequestHeaderKey      string
 
 	HxRequestHeader struct {
 		HxBoosted               bool
