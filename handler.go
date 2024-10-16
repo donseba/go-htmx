@@ -264,18 +264,7 @@ func (h *Handler) ResponseHeader(header HxResponseKey) string {
 func (h *Handler) Render(ctx context.Context, r RenderableComponent) (int, error) {
 	r.SetURL(h.r.URL)
 
-	output, err := r.Render(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	// If it's a partial render, return the output directly
-	if h.RenderPartial() {
-		return h.WriteHTML(output)
-	}
-
-	// Recursively wrap the output if the component is wrapped
-	output, err = h.wrapOutput(ctx, r, output)
+	output, err := r.RenderWithRequest(ctx, h.r)
 	if err != nil {
 		return 0, err
 	}

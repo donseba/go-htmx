@@ -6,7 +6,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"html/template"
+	"net/http"
 	"net/url"
 	"path/filepath"
 	"sort"
@@ -23,6 +25,7 @@ var (
 type (
 	RenderableComponent interface {
 		Render(ctx context.Context) (template.HTML, error)
+		RenderWithRequest(ctx context.Context, r *http.Request) (template.HTML, error)
 		Wrap(renderer RenderableComponent, target string) RenderableComponent
 		With(r RenderableComponent, target string) RenderableComponent
 		Attach(target string) RenderableComponent
@@ -40,6 +43,7 @@ type (
 		injectGlobalData(input map[string]any)
 		addPartial(key string, value any)
 		partials() map[string]RenderableComponent
+		renderPartial(ctx context.Context, r *http.Request, partialName string) (template.HTML, error)
 		isWrapped() bool
 		wrapper() RenderableComponent
 		target() string
@@ -52,6 +56,7 @@ type (
 		globalData      map[string]any
 		wrappedRenderer RenderableComponent
 		wrappedTarget   string
+		hxTarget        string
 		templates       []string
 		url             *url.URL
 		functions       template.FuncMap
@@ -81,6 +86,7 @@ func (c *Component) Render(ctx context.Context) (template.HTML, error) {
 	ctx = context.WithValue(ctx, c, true)
 
 	for key, value := range c.partials() {
+		value.SetURL(c.url)
 		value.injectData(c.templateData)
 		value.injectGlobalData(c.globalData)
 
@@ -97,6 +103,107 @@ func (c *Component) Render(ctx context.Context) (template.HTML, error) {
 	}
 
 	return c.renderNamed(ctx, filepath.Base(c.templates[0]), c.templates, c.templateData)
+}
+
+func (c *Component) RenderWithRequest(ctx context.Context, r *http.Request) (template.HTML, error) {
+	// Check for circular references
+	if ctx.Value(c) != nil {
+		return "", errors.New("circular reference detected in partials")
+	}
+
+	// Add current component to context
+	ctx = context.WithValue(ctx, c, true)
+
+	// Check if this is an HTMX request
+	hxTarget := r.Header.Get("HX-Target")
+
+	// Handle partial rendering if this is an HTMX request
+	if RenderPartial(r) {
+		if hxTarget == "" {
+			hxTarget = c.hxTarget
+		}
+
+		if hxTarget == c.hxTarget {
+			return c.renderNamed(ctx, filepath.Base(c.templates[0]), c.templates, c.templateData)
+		}
+
+		// Render the specified partial
+		return c.renderPartial(ctx, r, hxTarget)
+	}
+
+	// --- Non-HTMX request: Proceed with full rendering ---
+
+	// First, ensure that partials are rendered and injected into the wrapper
+	for key, value := range c.partials() {
+		value.SetURL(c.url)
+		value.injectData(c.templateData)
+		value.injectGlobalData(c.globalData)
+
+		ch, err := value.RenderWithRequest(ctx, r)
+		if err != nil {
+			return "", err
+		}
+		c.addPartial(key, ch)
+	}
+
+	// Render the main template with all data
+	if len(c.templates) == 0 {
+		return "", errors.New("no templates provided for rendering")
+	}
+
+	// Render the full template
+	output, err := c.renderNamed(ctx, filepath.Base(c.templates[0]), c.templates, c.templateData)
+	if err != nil {
+		return "", err
+	}
+
+	// --- Check if the component is wrapped, and apply wrapping ---
+	if c.isWrapped() {
+		return c.wrapOutput(ctx, c, output)
+	}
+
+	// If not wrapped, return the output as is
+	return output, nil
+}
+
+func (c *Component) renderPartial(ctx context.Context, r *http.Request, partialName string) (template.HTML, error) {
+	// Check if the partial exists in the current component
+	if partial, exists := c.partials()[partialName]; exists {
+		partial.SetURL(c.url)
+		partial.injectData(c.templateData)
+		partial.injectGlobalData(c.globalData)
+
+		return partial.Render(ctx)
+	}
+
+	// If the component is wrapping another, delegate to the wrapped component
+	if c.wrappedRenderer != nil {
+		return c.wrappedRenderer.renderPartial(ctx, r, partialName)
+	}
+
+	return "", fmt.Errorf("partial %s not found\n", partialName)
+}
+
+// wrapOutput recursively wraps the output in its parent components
+func (c *Component) wrapOutput(ctx context.Context, r RenderableComponent, output template.HTML) (template.HTML, error) {
+	if !r.isWrapped() {
+		// Base case: no more wrapping
+		return output, nil
+	}
+
+	parent := r.wrapper()
+	parent.SetURL(c.url)
+	parent.injectData(r.data())
+	parent.addPartial(r.target(), output)
+
+	// Render the parent component
+	parentOutput, err := parent.Render(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	// Recursively wrap the parent output if the parent is also wrapped
+	return c.wrapOutput(ctx, parent, parentOutput)
 }
 
 // renderNamed renders the given templates with the given data
@@ -161,6 +268,7 @@ func (c *Component) renderNamed(ctx context.Context, name string, templates []st
 func (c *Component) Wrap(renderer RenderableComponent, target string) RenderableComponent {
 	c.wrappedRenderer = renderer
 	c.wrappedTarget = target
+	c.hxTarget = target
 
 	return c
 }

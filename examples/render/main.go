@@ -29,8 +29,8 @@ func main() {
 
 	htmx.UseTemplateCache = false
 
-	http.HandleFunc("/", app.Home)
-	http.HandleFunc("/child", app.Child)
+	mux.HandleFunc("/", app.Home)
+	mux.HandleFunc("/child", app.Child)
 
 	err := http.ListenAndServe(":3210", mux)
 	log.Fatal(err)
@@ -43,7 +43,7 @@ func (a *App) Home(w http.ResponseWriter, r *http.Request) {
 		"Text": "Welcome to the home page",
 	}
 
-	page := htmx.NewComponent("home.html").SetData(data).Wrap(mainContent(), "Content")
+	page := htmx.NewComponent("home.html").SetData(data).Wrap(mainContent(), "content")
 
 	_, err := h.Render(r.Context(), page)
 	if err != nil {
@@ -58,7 +58,7 @@ func (a *App) Child(w http.ResponseWriter, r *http.Request) {
 		"Text": "Welcome to the child page",
 	}
 
-	page := htmx.NewComponent("child.html").SetData(data).Wrap(mainContent(), "Content")
+	page := htmx.NewComponent("child.html").SetData(data).Wrap(mainContent(), "content")
 
 	_, err := h.Render(r.Context(), page)
 	if err != nil {
