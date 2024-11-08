@@ -1,8 +1,8 @@
 {{ $self := . }}
 <div hx-boost="true" hx-target="#content" >
-{{ range $target := .Data.MenuItems }}
-    <a 
-        href="{{ $target.Link }}" 
+
+{{ range $target := .Global.MenuItems }}
+    <a href="{{ $target.Link }}"
         class="cursor-pointer block rounded rounded-md p-4 my-2 {{ if eq $self.URL.Path $target.Link }} bg-blue-500 {{ end }}"
         _="on click take .bg-blue-500 from .block for the event's target"
         >{{ $target.Name }}</a>

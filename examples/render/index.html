@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Data.Title }}</title>
+    <title>{{ .Global.Title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@2.0.0"></script>
@@ -24,10 +24,10 @@
 
         <div class="flex">
             <div class="flex-none w-48">
-                {{ .Partials.Sidebar }}
+                {{ .Partials.sidebar }}
             </div>
             <div class="grow p-4" id="content">
-                {{ .Partials.Content }}
+                {{ .Partials.content }}
             </div>
         </div>
     </div>

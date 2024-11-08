@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	partial "github.com/donseba/go-htmx/partials"
 	"log"
 	"net/http"
 
@@ -11,11 +12,6 @@ import (
 type (
 	App struct {
 		htmx *htmx.HTMX
-	}
-
-	route struct {
-		path    string
-		handler http.Handler
 	}
 )
 
@@ -27,7 +23,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	htmx.UseTemplateCache = false
+	partial.UseTemplateCache = false
+	partial.DefaultPartialHeader = "Hx-Target"
 
 	mux.HandleFunc("/", app.Home)
 	mux.HandleFunc("/child", app.Child)
@@ -43,12 +40,14 @@ func (a *App) Home(w http.ResponseWriter, r *http.Request) {
 		"Text": "Welcome to the home page",
 	}
 
-	page := htmx.NewComponent("home.html").SetData(data).Wrap(mainContent(), "Content")
+	page := partial.NewID("content").Templates("content.html").SetData(data).Wrap(mainContent())
 
-	_, err := h.Render(r.Context(), page)
+	out, err := page.RenderWithRequest(r.Context(), r)
 	if err != nil {
-		fmt.Printf("error rendering page: %v", err.Error())
+		fmt.Printf("error rendering page: %v\n", err.Error())
 	}
+
+	_, _ = h.WriteHTML(out)
 }
 
 func (a *App) Child(w http.ResponseWriter, r *http.Request) {
@@ -58,15 +57,17 @@ func (a *App) Child(w http.ResponseWriter, r *http.Request) {
 		"Text": "Welcome to the child page",
 	}
 
-	page := htmx.NewComponent("child.html").SetData(data).Wrap(mainContent(), "Content")
+	page := partial.NewID("content", "content.html").SetData(data).Wrap(mainContent())
 
-	_, err := h.Render(r.Context(), page)
+	out, err := page.RenderWithRequest(r.Context(), r)
 	if err != nil {
-		fmt.Printf("error rendering page: %v", err.Error())
+		fmt.Printf("error rendering child page: %v\n", err.Error())
 	}
+
+	_, _ = h.WriteHTML(out)
 }
 
-func mainContent() htmx.RenderableComponent {
+func mainContent() *partial.Partial {
 	menuItems := []struct {
 		Name string
 		Link string
@@ -80,6 +81,6 @@ func mainContent() htmx.RenderableComponent {
 		"MenuItems": menuItems,
 	}
 
-	sidebar := htmx.NewComponent("sidebar.html")
-	return htmx.NewComponent("index.html").SetData(data).With(sidebar, "Sidebar")
+	sidebar := partial.NewID("sidebar", "sidebar.html")
+	return partial.New("index.html").SetGlobalData(data).With(sidebar)
 }
