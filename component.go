@@ -7,7 +7,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"html/template"
+	"io/fs"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -55,6 +57,7 @@ type (
 		templates       []string
 		url             *url.URL
 		functions       template.FuncMap
+		fs              fs.FS
 	}
 )
 
@@ -65,7 +68,14 @@ func NewComponent(templates ...string) *Component {
 		partial:      make(map[string]any),
 		with:         make(map[string]RenderableComponent),
 		templates:    templates,
+		fs:           os.DirFS("./"),
 	}
+}
+
+// FS sets the filesystem to load templates from, this allows for embedding templates into the go binary.
+func (c *Component) FS(fsys fs.FS) *Component {
+	c.fs = fsys
+	return c
 }
 
 // Render renders the given templates with the given data
@@ -123,7 +133,7 @@ func (c *Component) renderNamed(ctx context.Context, name string, templates []st
 	tmpl, cached := templateCache.Load(cacheKey)
 	if !cached || !UseTemplateCache {
 		// Parse and cache template as before
-		tmpl, err = template.New(name).Funcs(functions).ParseFiles(templates...)
+		tmpl, err = template.New(name).Funcs(functions).ParseFS(c.fs, templates...)
 		if err != nil {
 			return "", err
 		}
