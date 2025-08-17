@@ -72,8 +72,6 @@ func (m *Message) String() string {
 	}
 	sb.WriteString(fmt.Sprintf("data: %v\n\n", m.Data))
 
-	fmt.Println(sb.String())
-
 	return sb.String()
 }
 
