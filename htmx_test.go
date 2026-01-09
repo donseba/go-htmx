@@ -11,10 +11,11 @@ import (
 
 var (
 	location = &LocationInput{
+		Path:    "http://new-url.com",
 		Source:  "source",
 		Event:   "",
 		Handler: "",
-		Target:  "http://new-url.com",
+		Target:  "body",
 		Swap:    "",
 		Values:  nil,
 		Header:  nil,

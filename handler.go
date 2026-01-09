@@ -148,14 +148,14 @@ func (h *Handler) Header() http.Header {
 }
 
 type LocationInput struct {
+	Path    string                 `json:"path"`    // is required and is url to load the response from
 	Source  string                 `json:"source"`  // source - the source element of the request
-	Event   string                 `json:"event"`   //event - an event that "triggered" the request
-	Handler string                 `json:"handler"` //handler - a callback that will handle the response HTML
-	Target  string                 `json:"target"`  //target - the target to swap the response into
-	Swap    string                 `json:"swap"`    //swap - how the response will be swapped in relative to the target
-	Values  map[string]interface{} `json:"values"`  //values - values to submit with the request
-	Header  map[string]interface{} `json:"headers"` //headers - headers to submit with the request
-
+	Event   string                 `json:"event"`   // event - an event that "triggered" the request
+	Handler string                 `json:"handler"` // handler - a callback that will handle the response HTML
+	Target  string                 `json:"target"`  // target - the target to swap the response into
+	Swap    string                 `json:"swap"`    // swap - how the response will be swapped in relative to the target
+	Values  map[string]interface{} `json:"values"`  // values - values to submit with the request
+	Header  map[string]interface{} `json:"headers"` // headers - headers to submit with the request
 }
 
 // Location can be used to trigger a client side redirection without reloading the whole page
