@@ -75,6 +75,7 @@ func TestNew(t *testing.T) {
 
 	j, _ := json.Marshal(location)
 	equal(t, string(j), handler.ResponseHeader(HXLocation))
+	equal(t, `{"path":"http://new-url.com","source":"source","target":"body"}`, handler.ResponseHeader(HXLocation))
 	equal(t, pushURL, handler.ResponseHeader(HXPushUrl))
 	equal(t, redirect, handler.ResponseHeader(HXRedirect))
 	equal(t, HxBoolToStr(refresh), handler.ResponseHeader(HXRefresh))
