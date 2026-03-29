@@ -73,8 +73,23 @@ func TestNew(t *testing.T) {
 	handler.TriggerAfterSwap(triggerAfterSwap)
 	handler.WriteHeader(http.StatusAccepted)
 
-	j, _ := json.Marshal(location)
-	equal(t, string(j), handler.ResponseHeader(HXLocation))
+	locationHeader := handler.ResponseHeader(HXLocation)
+	var locationMap map[string]any
+	if err := json.Unmarshal([]byte(locationHeader), &locationMap); err != nil {
+		t.Fatalf("expected HX-Location header to contain valid JSON, got %q: %v", locationHeader, err)
+	}
+	if len(locationMap) != 3 {
+		t.Fatalf("expected HX-Location JSON to have exactly 3 keys, got %d: %#v", len(locationMap), locationMap)
+	}
+	if v, ok := locationMap["path"].(string); !ok || v != location.Path {
+		t.Errorf("expected HX-Location.path %q, got %#v", location.Path, locationMap["path"])
+	}
+	if v, ok := locationMap["source"].(string); !ok || v != location.Source {
+		t.Errorf("expected HX-Location.source %q, got %#v", location.Source, locationMap["source"])
+	}
+	if v, ok := locationMap["target"].(string); !ok || v != location.Target {
+		t.Errorf("expected HX-Location.target %q, got %#v", location.Target, locationMap["target"])
+	}
 	equal(t, pushURL, handler.ResponseHeader(HXPushUrl))
 	equal(t, redirect, handler.ResponseHeader(HXRedirect))
 	equal(t, HxBoolToStr(refresh), handler.ResponseHeader(HXRefresh))
