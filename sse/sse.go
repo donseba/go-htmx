@@ -160,6 +160,7 @@ func (manager *broadcastManager) startWorkers() {
 	for i := 0; i < manager.workerPoolSize; i++ {
 		go func() {
 			for message := range manager.broadcast {
+				manager.messageHistory.Add(message)
 				manager.clients.Range(func(key, value any) bool {
 					client, ok := value.(Listener)
 					if !ok {
@@ -167,7 +168,6 @@ func (manager *broadcastManager) startWorkers() {
 					}
 					select {
 					case client.Chan() <- message:
-						manager.messageHistory.Add(message)
 					default:
 						// If the client's channel is full, drop the message
 					}
@@ -189,6 +189,7 @@ func (manager *broadcastManager) unregister(clientID string) {
 }
 
 type history struct {
+	mu       sync.RWMutex
 	messages []Envelope
 	maxSize  int // Maximum number of messages to retain
 }
@@ -201,6 +202,9 @@ func newHistory(maxSize int) *history {
 }
 
 func (h *history) Add(message Envelope) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
 	h.messages = append(h.messages, message)
 	// Ensure history does not exceed maxSize
 	if len(h.messages) > h.maxSize {
@@ -210,7 +214,11 @@ func (h *history) Add(message Envelope) {
 }
 
 func (h *history) Send(c Listener) {
-	for _, msg := range h.messages {
+	h.mu.RLock()
+	messages := append([]Envelope(nil), h.messages...)
+	h.mu.RUnlock()
+
+	for _, msg := range messages {
 		c.Chan() <- msg
 	}
 }
