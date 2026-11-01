@@ -463,6 +463,12 @@ func (h *HTMX) SSESend(message sse.Envelope)
 ```
 --- 
 
+## Need more?
+
+go-htmx stays focused on htmx's request and response headers, with simple component rendering and SSE. If you want more, such as rendering a full page or only the targeted partial from one template tree, out-of-band swaps, and connectors for htmx, Turbo and Unpoly, have a look at [go-partial](https://github.com/donseba/go-partial). It grew out of go-htmx and is part of [go-webthings](https://gowebthings.com/components).
+
+--- 
+
 ## Contributing
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
