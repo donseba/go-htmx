@@ -8,6 +8,8 @@
 [![Stars](https://img.shields.io/github/stars/donseba/go-htmx)](https://github.com/donseba/go-htmx/stargazers)
 [![Go Report Card](https://goreportcard.com/badge/github.com/donseba/go-htmx)](https://goreportcard.com/report/github.com/donseba/go-htmx)
 
+> **Successor:** [go-partial](https://github.com/donseba/go-partial) supersedes go-htmx. It renders a full page or only the targeted partial from the same template tree, supports htmx 2 and 4, Turbo and Unpoly, and is part of [go-webthings](https://gowebthings.com/components).
+
 ## Description
 
 This repository contains the htmx Go package, designed to enhance server-side handling of HTML generated with the [HTMX library](https://htmx.org/). 
