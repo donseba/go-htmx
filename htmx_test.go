@@ -157,7 +157,9 @@ func TestNoRouter(t *testing.T) {
 		t.Error("an error occurred while making the request")
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	_, err = io.ReadAll(resp.Body)
 	if err != nil {
@@ -213,7 +215,9 @@ func TestStopPolling(t *testing.T) {
 		t.Error("an error occurred while making the request")
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	equalInt(t, StatusStopPolling, resp.StatusCode)
 }
@@ -239,7 +243,9 @@ func TestSwap(t *testing.T) {
 		t.Error("an error occurred while making the request")
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	equal(t, "innerHTML scroll:top settle:1s", resp.Header.Get(HXReswap.String()))
 }

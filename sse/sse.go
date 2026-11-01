@@ -68,9 +68,10 @@ func (m *Message) String() string {
 	sb := strings.Builder{}
 
 	if m.Event != "" {
-		sb.WriteString(fmt.Sprintf("event: %s\n", m.Event))
+		fmt.Fprintf(&sb, "event: %s\n", m.Event)
 	}
-	sb.WriteString(fmt.Sprintf("data: %v\n\n", m.Data))
+
+	fmt.Fprintf(&sb, "data: %v\n\n", m.Data)
 
 	return sb.String()
 }
