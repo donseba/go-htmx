@@ -2,6 +2,7 @@ package htmx
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -32,6 +33,18 @@ func (s *SwapTiming) String() string {
 	return out
 }
 
+// htmx4String returns the timing in the syntax of htmx 4. It always writes the duration, as htmx 4 reads
+// a bare swap or settle as true, and writes it in whole seconds or in milliseconds, which htmx 4 parses.
+func (s *SwapTiming) htmx4String() string {
+	if s.duration%time.Second == 0 {
+		return fmt.Sprintf("%s:%ds", s.mode, s.duration/time.Second)
+	}
+
+	ms := strconv.FormatFloat(float64(s.duration)/float64(time.Millisecond), 'f', -1, 64)
+
+	return fmt.Sprintf("%s:%sms", s.mode, ms)
+}
+
 type SwapScrolling struct {
 	mode      SwapScrollingMode
 	target    string
@@ -52,6 +65,34 @@ func (s *SwapScrolling) String() string {
 	}
 
 	return out
+}
+
+// htmx4String returns the scrolling in the syntax of htmx 4, which takes the target in a modifier of its own:
+// show:top showTarget:"#element".
+func (s *SwapScrolling) htmx4String() string {
+	var out string
+
+	out = string(s.mode)
+
+	if s.direction != "" {
+		out += ":" + s.direction.String()
+	}
+
+	if s.target != "" {
+		out += " " + string(s.mode) + "Target:" + hconQuote(s.target)
+	}
+
+	return out
+}
+
+// hconQuote quotes a value for the HCON syntax of htmx 4, which has no escapes:
+// in double quotes, or in single quotes when the value holds a double quote.
+func hconQuote(value string) string {
+	if strings.Contains(value, `"`) {
+		return "'" + value + "'"
+	}
+
+	return `"` + value + `"`
 }
 
 // NewSwap returns a new Swap
@@ -162,14 +203,25 @@ func (s *Swap) FocusScroll(focusScroll bool) *Swap {
 	return s
 }
 
-// String returns the string representation of the Swap
+// String returns the string representation of the Swap, in the syntax of htmx 2
 func (s *Swap) String() string {
+	return s.StringFor(Version2)
+}
+
+// StringFor returns the string representation of the Swap in the syntax of the given htmx version.
+// htmx 4 writes focusScroll rather than focus-scroll, and the target of scroll and show in a modifier of its own:
+// show:top showTarget:"#element" rather than show:#element:top.
+func (s *Swap) StringFor(version Version) string {
 	var parts []string
 
 	parts = append(parts, string(s.style))
 
 	if s.scrolling != nil {
-		parts = append(parts, s.scrolling.String())
+		if version == Version4 {
+			parts = append(parts, s.scrolling.htmx4String())
+		} else {
+			parts = append(parts, s.scrolling.String())
+		}
 	}
 
 	if s.transition != nil {
@@ -181,11 +233,19 @@ func (s *Swap) String() string {
 	}
 
 	if s.focusScroll != nil {
-		parts = append(parts, fmt.Sprintf("focus-scroll:%s", HxBoolToStr(*s.focusScroll)))
+		if version == Version4 {
+			parts = append(parts, fmt.Sprintf("focusScroll:%s", HxBoolToStr(*s.focusScroll)))
+		} else {
+			parts = append(parts, fmt.Sprintf("focus-scroll:%s", HxBoolToStr(*s.focusScroll)))
+		}
 	}
 
 	if s.timing != nil {
-		parts = append(parts, s.timing.String())
+		if version == Version4 {
+			parts = append(parts, s.timing.htmx4String())
+		} else {
+			parts = append(parts, s.timing.String())
+		}
 	}
 
 	return strings.Join(parts, " ")
@@ -215,6 +275,18 @@ const (
 
 	// SwapNone does not append content from response (out of band items will still be processed).
 	SwapNone SwapStyle = "none"
+
+	// SwapInnerMorph morphs the children of the target element into the response (htmx 4)
+	SwapInnerMorph SwapStyle = "innerMorph"
+
+	// SwapOuterMorph morphs the target element into the response (htmx 4)
+	SwapOuterMorph SwapStyle = "outerMorph"
+
+	// SwapOuterSync replaces the children of the target element and copies the attributes of the response's element (htmx 4)
+	SwapOuterSync SwapStyle = "outerSync"
+
+	// SwapTextContent replaces the text content of the target element with the text of the response (htmx 4)
+	SwapTextContent SwapStyle = "textContent"
 )
 
 type SwapStyle string

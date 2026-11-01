@@ -27,6 +27,7 @@ All functionality found in this repository has a certain use case in various pro
 - **Trigger Management**: Define and manage triggers for HTMX events, supporting both simple and detailed triggers.
 - **Middleware Support**: Integrate HTMX seamlessly with Go middleware for easy HTMX header configuration.
 - **io.Writer Support**: The HTMX handler implements the io.Writer interface for easy integration with existing Go code.
+- **htmx 2 and htmx 4**: htmx 2 by default, htmx 4 with one setting, see [htmx 4](#htmx-4).
 
 ---
 
@@ -188,6 +189,112 @@ func (c *Controller) Route(w http.ResponseWriter, r *http.Request) {
 	_, _ = h.Write([]byte("your content"))
 }
 ```
+
+---
+
+## htmx 4
+
+go-htmx speaks htmx 2 by default. For [htmx 4](https://four.htmx.org/), set the version on the htmx instance:
+
+```go
+app := &App{
+	htmx: htmx.New(),
+}
+
+app.htmx.SetVersion(htmx.Version4)
+```
+
+Handlers created after `SetVersion` read the request headers and write the response headers the way htmx 4 does. Without it, nothing changes.
+
+```html
+<script src="https://unpkg.com/htmx.org@4.0.0/dist/htmx.min.js"></script>
+```
+
+### What changes with htmx 4
+
+| Method | htmx 2 | htmx 4 (`Version4`) |
+| --- | --- | --- |
+| `h.RenderPartial()` | true for an htmx request that is no history restore | also false for `HX-Request-Type: full`, which htmx 4 sends for body swaps, `hx-select` and history restoration |
+| `h.TargetID()` | `HX-Target`, the id of the target | the decoded id of `HX-Target`, which htmx 4 sends as `tagName#id`: `div#content` gives `content` |
+| `h.SourceID()` | `HX-Trigger`, the id of the element that triggered the request | the decoded id of `HX-Source`: `button#save` gives `save` |
+| `h.Prompt()` | `HX-Prompt` as sent | `HX-Prompt` decoded, as the `hx-prompt` extension of htmx 4 sends it URI encoded |
+| `h.ReSwapWithObject(swap)` | `show:#list:top focus-scroll:true` | `show:top showTarget:"#list" focusScroll:true` |
+| `h.TriggerAfterSwap*`, `h.TriggerAfterSettle*` | `HX-Trigger-After-Swap`, `HX-Trigger-After-Settle` | nothing, as htmx 4 removed both headers |
+| `h.StopPolling()` | status 286, which stops polling | status 286, which htmx 4 swaps like a 200 while it keeps polling |
+
+`h.Request()` holds the request headers as sent, for both versions, now also `HxRequestType` (`HX-Request-Type`) and `HxSource` (`HX-Source`). htmx 4 no longer sends `HX-Trigger` and `HX-Trigger-Name`, and sends `HX-Prompt` only with its `hx-prompt` extension.
+
+The other response headers are the same in htmx 4. `Location` works too; htmx 4 does not use `LocationInput.Handler`.
+
+### Triggers
+
+htmx 4 triggers the events of `HX-Trigger` once the response is swapped and settled, so `h.Trigger` and `h.TriggerWithObject` cover most uses of `TriggerAfterSwap` and `TriggerAfterSettle`. For exact timing, listen to `htmx:after:swap` or `htmx:after:settle` in the browser. The notifications (`TriggerSuccess`, `TriggerError`, …) use `HX-Trigger` and work with both versions.
+
+### Polling
+
+htmx 4 has no status code that stops polling: it stops when the polling element leaves the page. Answer the last poll with markup that replaces the polling element, without its `every` trigger:
+
+```go
+func (a *App) Progress(w http.ResponseWriter, r *http.Request) {
+	h := a.htmx.NewHandler(w, r)
+
+	if done {
+		// <div id="progress" hx-get="/progress" hx-trigger="every 1s"> is replaced, so htmx 4 stops polling
+		h.ReTarget("#progress")
+		h.ReSwap("outerHTML")
+		h.JustWriteString(`<div id="progress">Done</div>`)
+		return
+	}
+
+	h.JustWriteString("Working…")
+}
+```
+
+### Swap syntax
+
+`Swap.String()` keeps the htmx 2 syntax. `Swap.StringFor` writes the syntax of a version, for an `hx-swap` attribute in a template or anywhere without a handler:
+
+```go
+swap := htmx.NewSwap().ScrollBottom("#messages")
+
+swap.StringFor(htmx.Version4)      // innerHTML scroll:bottom scrollTarget:"#messages"
+swap.StringFor(app.htmx.Version()) // the version of the htmx instance
+```
+
+```html
+<div hx-get="/messages" hx-swap="{{ .Swap.StringFor 4 }}"></div>
+```
+
+htmx 4 adds the swap styles `htmx.SwapInnerMorph`, `htmx.SwapOuterMorph`, `htmx.SwapOuterSync` and `htmx.SwapTextContent`. A string passed to `h.ReSwap` is sent as given, so write it in the syntax of htmx 4.
+
+### Error responses
+
+htmx 4 swaps every response except 204 and 304, also 4xx and 5xx responses, which htmx 2 did not swap. Write error responses that work as swap content, or control it per status in the page with `hx-status`, such as `hx-status:5xx="swap:none"`.
+
+### Request checks without a handler
+
+The package functions `htmx.IsHxRequest(r)`, `htmx.IsHxBoosted(r)`, `htmx.IsHxHistoryRestoreRequest(r)` and `htmx.RenderPartial(r)`, and the middleware, have no version: they keep the htmx 2 behaviour. With htmx 4, use the handler of the htmx instance, `app.htmx.NewHandler(w, r).RenderPartial()`.
+
+### Server Sent Events
+
+The `sse` package works with the `hx-sse` extension of htmx 4, which replaces `hx-ext="sse"`, `sse-connect` and `sse-swap`:
+
+```html
+<script src="https://unpkg.com/htmx.org@4.0.0/dist/htmx.min.js"></script>
+<script src="https://unpkg.com/htmx.org@4.0.0/dist/ext/hx-sse.min.js"></script>
+
+<div hx-sse:connect="/sse"></div>
+```
+
+htmx 4 swaps a message without an event name into the element, and triggers a message with an event name as an event on the element. To update several elements from one stream, send messages without an event name, with out-of-band elements:
+
+```go
+sseManager.Send(sse.NewMessage(`<div id="time" hx-swap-oob="true">12:00</div>`))
+```
+
+### In the browser
+
+htmx 4 changes more in the page than in the headers: attributes are inherited only with `:inherited`, such as `hx-target:inherited="#content"`, and some attributes and events are renamed. See [What's new in htmx 4](https://four.htmx.org/docs/whats-new-in-htmx-4). The [examples](examples) use htmx 4.
 
 ---
 
@@ -414,6 +521,7 @@ func (c *controller) Hello(c *gin.Context) {
 The htmx package provides support for Server-Sent Events (SSE) in Go applications. This feature allows you to send real-time updates from the server to the client, enabling live updates and notifications in your web application.
 
 You can read about this feature in the [htmx documentation](https://htmx.org/extensions/server-sent-events/) and the [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events).
+For htmx 4, see [Server Sent Events](#server-sent-events) in the htmx 4 section.
 
 ### Usage
 
