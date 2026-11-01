@@ -554,6 +554,8 @@ go func() {
 }()
 ``` 
 
+A message can hold data of several lines, such as rendered HTML: each line is sent in a `data:` field of its own, and the browser joins the lines again.
+
 ### HTMX helper methods 
 
 There are two helper methods to simplify the usage of SSE in your HTMX application.

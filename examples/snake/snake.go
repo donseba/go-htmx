@@ -7,7 +7,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"regexp"
 	"sync"
 	"time"
 )
@@ -71,11 +70,8 @@ func main() {
 				log.Printf("error rendering page: %v", err.Error())
 			}
 
-			re := regexp.MustCompile(`\s+`)
-			stringOut := re.ReplaceAllString(string(out), "")
-
 			// htmx 4 swaps a message without an event name into the hx-sse:connect element
-			sseManager.Send(sse.NewMessage(stringOut))
+			sseManager.Send(sse.NewMessage(string(out)))
 			time.Sleep(150 * time.Millisecond)
 		}
 	}()
