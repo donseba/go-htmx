@@ -1,0 +1,15 @@
+// The examples build against the go-htmx module of this repository, including
+// changes that are not released yet. A copy made with gonew does not take this
+// file along: it uses the go-htmx version in its own go.mod.
+
+go 1.23
+
+use (
+	..
+	./embedfs
+	./pokedex
+	./render
+	./snake
+	./sse
+	./tiktaktoe
+)
