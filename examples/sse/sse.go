@@ -27,12 +27,16 @@ func main() {
 		htmx: htmx.New(),
 	}
 
+	// the pages load htmx 4
+	app.htmx.SetVersion(htmx.Version4)
+
 	sseManager = sse.NewManager(5)
 
 	go func() {
 		for {
 			time.Sleep(1 * time.Second) // Send a message every second
-			sseManager.Send(sse.NewMessage(fmt.Sprintf("<div>The current time is: %v</div>", time.Now().Format(time.RFC850))).WithEvent("time"))
+			// htmx 4 swaps the out-of-band element of a message without an event name into the element with its id
+			sseManager.Send(sse.NewMessage(fmt.Sprintf(`<div id="time" hx-swap-oob="true">The current time is: %v</div>`, time.Now().Format(time.RFC850))))
 		}
 	}()
 
@@ -45,7 +49,7 @@ func main() {
 			}
 
 			time.Sleep(1 * time.Second) // Send a message every seconds
-			sseManager.Send(sse.NewMessage(fmt.Sprintf("connected clients: %v", clientsStr)).WithEvent("clients"))
+			sseManager.Send(sse.NewMessage(fmt.Sprintf(`<div id="clients" hx-swap-oob="true">connected clients: %v</div>`, clientsStr)))
 		}
 	}()
 

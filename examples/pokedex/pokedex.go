@@ -34,6 +34,9 @@ func main() {
 		htmx: htmx.New(),
 	}
 
+	// the pages load htmx 4
+	app.htmx.SetVersion(htmx.Version4)
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /", app.Home)

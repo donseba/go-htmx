@@ -1,5 +1,5 @@
 {{ $self := . }}
-<div hx-boost="true" hx-target="#content" >
+<div hx-boost:inherited="true" hx-target:inherited="#content" >
 {{ range $target := .Data.MenuItems }}
     <a 
         href="{{ $target.Link }}" 
