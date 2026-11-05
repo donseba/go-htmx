@@ -29,20 +29,33 @@ type (
 	}
 
 	HTMX struct {
-		log Logger
+		log     Logger
+		version Version
 	}
 )
 
-// New returns a new htmx instance.
+// New returns a new htmx instance, for htmx 2. Use SetVersion for htmx 4.
 func New() *HTMX {
 	return &HTMX{
-		log: slog.Default().WithGroup("htmx"),
+		log:     slog.Default().WithGroup("htmx"),
+		version: Version2,
 	}
 }
 
 // SetLog sets the logger for the htmx instance.
 func (h *HTMX) SetLog(log Logger) {
 	h.log = log
+}
+
+// SetVersion sets the htmx version the browser runs, Version2 by default.
+// Handlers created after the call use it. Any version other than Version4 behaves as Version2.
+func (h *HTMX) SetVersion(version Version) {
+	h.version = version
+}
+
+// Version returns the htmx version of the htmx instance.
+func (h *HTMX) Version() Version {
+	return h.version
 }
 
 // NewHandler returns a new htmx handler.
@@ -53,6 +66,7 @@ func (h *HTMX) NewHandler(w http.ResponseWriter, r *http.Request) *Handler {
 		request:  h.HxHeader(r),
 		response: h.HxResponseHeader(w.Header()),
 		log:      h.log,
+		version:  h.version,
 	}
 }
 

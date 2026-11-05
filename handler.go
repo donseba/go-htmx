@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"net/url"
 )
 
 type (
@@ -14,11 +15,13 @@ type (
 		r        *http.Request
 		request  HxRequestHeader
 		response *HxResponseHeader
+		version  Version
 	}
 )
 
 const (
-	// StatusStopPolling is the status code that will stop htmx from polling
+	// StatusStopPolling is the status code that will stop htmx 2 from polling.
+	// htmx 4 has no such status code: it swaps a 286 response like a 200 one and keeps polling.
 	StatusStopPolling = 286
 )
 
@@ -39,8 +42,57 @@ func (h *Handler) IsHxHistoryRestoreRequest() bool {
 
 // RenderPartial returns true if the request is an HTMX request that is either boosted or a standard request,
 // provided it is not a history restore request.
+// With htmx 4 it is also false when htmx asks for the whole page (HX-Request-Type: full),
+// as it does for body swaps, hx-select and history restoration.
 func (h *Handler) RenderPartial() bool {
-	return (h.request.HxRequest || h.request.HxBoosted) && !h.request.HxHistoryRestoreRequest
+	partial := (h.request.HxRequest || h.request.HxBoosted) && !h.request.HxHistoryRestoreRequest
+	if !partial || h.version != Version4 {
+		return partial
+	}
+
+	switch h.request.HxRequestType {
+	case "", HxRequestTypePartial:
+		return true
+	default:
+		return false
+	}
+}
+
+// TargetID returns the id of the target element of the request.
+// htmx 2 sends the id in HX-Target; htmx 4 sends tagName#id, of which TargetID returns the decoded id,
+// or an empty string when the target has no id.
+func (h *Handler) TargetID() string {
+	if h.version != Version4 {
+		return h.request.HxTarget
+	}
+
+	return elementID(h.request.HxTarget)
+}
+
+// SourceID returns the id of the element that triggered the request.
+// htmx 2 sends the id in HX-Trigger; htmx 4 sends tagName#id in HX-Source, of which SourceID returns the decoded id,
+// or an empty string when the element has no id.
+func (h *Handler) SourceID() string {
+	if h.version != Version4 {
+		return h.request.HxTrigger
+	}
+
+	return elementID(h.request.HxSource)
+}
+
+// Prompt returns the answer of the user to the hx-prompt of the request.
+// htmx 2 sends the answer as is; the hx-prompt extension of htmx 4 sends it URI encoded, which Prompt decodes.
+func (h *Handler) Prompt() string {
+	if h.version != Version4 {
+		return h.request.HxPrompt
+	}
+
+	decoded, err := url.PathUnescape(h.request.HxPrompt)
+	if err != nil {
+		return h.request.HxPrompt
+	}
+
+	return decoded
 }
 
 // Write writes the data to the connection as part of an HTTP reply.
@@ -137,7 +189,9 @@ func (h *Handler) WriteHeader(code int) {
 	h.w.WriteHeader(code)
 }
 
-// StopPolling sets the response status to 286, which will stop htmx from polling
+// StopPolling sets the response status to 286, which will stop htmx 2 from polling.
+// htmx 4 swaps a 286 response like a 200 one and keeps polling until the polling element leaves the page:
+// answer with markup that replaces the polling element instead.
 func (h *Handler) StopPolling() {
 	h.WriteHeader(StatusStopPolling)
 }
@@ -198,10 +252,11 @@ func (h *Handler) ReSwap(val string) {
 	h.response.Set(HXReswap, val)
 }
 
-// ReSwapWithObject allows you to specify how the response will be swapped. See hx-swap for possible values
+// ReSwapWithObject allows you to specify how the response will be swapped. See hx-swap for possible values.
+// The swap is written in the syntax of the htmx version of the handler.
 // https://htmx.org/attributes/hx-swap/
 func (h *Handler) ReSwapWithObject(s *Swap) {
-	h.ReSwap(s.String())
+	h.ReSwap(s.StringFor(h.version))
 }
 
 // ReTarget a CSS selector that updates the target of the content update to a different element on the page
@@ -227,24 +282,36 @@ func (h *Handler) TriggerWithObject(t *Trigger) {
 }
 
 // TriggerAfterSettle trigger events after the settling step.
+// htmx 4 removed the HX-Trigger-After-Settle header, so with htmx 4 it sets nothing:
+// use Trigger, whose events htmx 4 triggers after the swap and settle, or listen to htmx:after:settle.
 // https://htmx.org/headers/hx-trigger/
 func (h *Handler) TriggerAfterSettle(val string) {
+	if h.version == Version4 {
+		return
+	}
+
 	h.response.Set(HXTriggerAfterSettle, val)
 }
 
-// TriggerAfterSettleWithObject trigger events after the settling step.
+// TriggerAfterSettleWithObject trigger events after the settling step. With htmx 4 it sets nothing, see TriggerAfterSettle.
 // https://htmx.org/headers/hx-trigger/
 func (h *Handler) TriggerAfterSettleWithObject(t *Trigger) {
 	h.TriggerAfterSettle(t.String())
 }
 
 // TriggerAfterSwap trigger events after the swap step.
+// htmx 4 removed the HX-Trigger-After-Swap header, so with htmx 4 it sets nothing:
+// use Trigger, whose events htmx 4 triggers after the swap and settle, or listen to htmx:after:swap.
 // https://htmx.org/headers/hx-trigger/
 func (h *Handler) TriggerAfterSwap(val string) {
+	if h.version == Version4 {
+		return
+	}
+
 	h.response.Set(HXTriggerAfterSwap, val)
 }
 
-// TriggerAfterSwapWithObject trigger events after the swap step.
+// TriggerAfterSwapWithObject trigger events after the swap step. With htmx 4 it sets nothing, see TriggerAfterSwap.
 // https://htmx.org/headers/hx-trigger/
 func (h *Handler) TriggerAfterSwapWithObject(t *Trigger) {
 	h.TriggerAfterSwap(t.String())

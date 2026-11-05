@@ -13,6 +13,7 @@ go install golang.org/x/tools/cmd/gonew@latest
 ```console
 gonew github.com/donseba/go-htmx/examples/pokedex your.module/my-app # e.g. github.com/donseba/my-app
 cd my-app
+go get github.com/donseba/go-htmx@latest
 go mod tidy
 go build
 

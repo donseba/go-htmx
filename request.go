@@ -2,6 +2,8 @@ package htmx
 
 import (
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 const (
@@ -11,11 +13,20 @@ const (
 	HxRequestHeaderBoosted               HxRequestHeaderKey = "HX-Boosted"
 	HxRequestHeaderCurrentURL            HxRequestHeaderKey = "HX-Current-URL"
 	HxRequestHeaderHistoryRestoreRequest HxRequestHeaderKey = "HX-History-Restore-Request"
-	HxRequestHeaderPrompt                HxRequestHeaderKey = "HX-Prompt"
+	HxRequestHeaderPrompt                HxRequestHeaderKey = "HX-Prompt" // htmx 4 sends it only with the hx-prompt extension
 	HxRequestHeaderRequest               HxRequestHeaderKey = "HX-Request"
-	HxRequestHeaderTarget                HxRequestHeaderKey = "HX-Target"
-	HxRequestHeaderTriggerName           HxRequestHeaderKey = "HX-Trigger-Name"
-	HxRequestHeaderTrigger               HxRequestHeaderKey = "HX-Trigger"
+	HxRequestHeaderRequestType           HxRequestHeaderKey = "HX-Request-Type" // htmx 4: "full" or "partial"
+	HxRequestHeaderSource                HxRequestHeaderKey = "HX-Source"       // htmx 4: the element that triggered the request, tagName#id
+	HxRequestHeaderTarget                HxRequestHeaderKey = "HX-Target"       // htmx 2: the id of the target, htmx 4: tagName#id
+	HxRequestHeaderTriggerName           HxRequestHeaderKey = "HX-Trigger-Name" // htmx 2 only
+	HxRequestHeaderTrigger               HxRequestHeaderKey = "HX-Trigger"      // htmx 2 only, htmx 4 sends HX-Source
+
+	// HxRequestTypeFull is the HX-Request-Type of an htmx 4 request for the whole page,
+	// as htmx 4 asks for body swaps, hx-select and history restoration.
+	HxRequestTypeFull = "full"
+
+	// HxRequestTypePartial is the HX-Request-Type of an htmx 4 request for a part of the page.
+	HxRequestTypePartial = "partial"
 )
 
 type (
@@ -27,6 +38,8 @@ type (
 		HxHistoryRestoreRequest bool
 		HxPrompt                string
 		HxRequest               bool
+		HxRequestType           string
+		HxSource                string
 		HxTarget                string
 		HxTriggerName           string
 		HxTrigger               string
@@ -40,6 +53,8 @@ func HxRequestHeaderFromRequest(r *http.Request) HxRequestHeader {
 		HxHistoryRestoreRequest: HxStrToBool(r.Header.Get(HxRequestHeaderHistoryRestoreRequest.String())),
 		HxPrompt:                r.Header.Get(HxRequestHeaderPrompt.String()),
 		HxRequest:               HxStrToBool(r.Header.Get(HxRequestHeaderRequest.String())),
+		HxRequestType:           r.Header.Get(HxRequestHeaderRequestType.String()),
+		HxSource:                r.Header.Get(HxRequestHeaderSource.String()),
 		HxTarget:                r.Header.Get(HxRequestHeaderTarget.String()),
 		HxTriggerName:           r.Header.Get(HxRequestHeaderTriggerName.String()),
 		HxTrigger:               r.Header.Get(HxRequestHeaderTrigger.String()),
@@ -59,4 +74,20 @@ func (h *HTMX) HxHeader(r *http.Request) HxRequestHeader {
 
 func (x HxRequestHeaderKey) String() string {
 	return string(x)
+}
+
+// elementID returns the id in an element identifier of htmx 4, tagName#encodeURI(id), decoded.
+// It is empty for an element without an id, and the id as sent when it does not decode.
+func elementID(identifier string) string {
+	_, id, ok := strings.Cut(identifier, "#")
+	if !ok {
+		return ""
+	}
+
+	decoded, err := url.PathUnescape(id)
+	if err != nil {
+		return id
+	}
+
+	return decoded
 }

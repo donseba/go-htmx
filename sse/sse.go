@@ -63,14 +63,24 @@ func NewMessage(data string) *Message {
 	}
 }
 
+// lineBreaks are the line endings of server-sent events: \r\n, \r and \n.
+var lineBreaks = strings.NewReplacer("\r\n", "\n", "\r", "\n")
+
 // String returns the message as a string.
+// Each line of the data is sent in a data field of its own, which the browser joins again with newlines,
+// so data of several lines, such as rendered HTML, arrives as it was.
 func (m *Message) String() string {
 	sb := strings.Builder{}
 
 	if m.Event != "" {
-		sb.WriteString(fmt.Sprintf("event: %s\n", m.Event))
+		fmt.Fprintf(&sb, "event: %s\n", m.Event)
 	}
-	sb.WriteString(fmt.Sprintf("data: %v\n\n", m.Data))
+
+	for _, line := range strings.Split(lineBreaks.Replace(m.Data), "\n") {
+		fmt.Fprintf(&sb, "data: %s\n", line)
+	}
+
+	sb.WriteString("\n")
 
 	return sb.String()
 }

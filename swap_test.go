@@ -151,3 +151,57 @@ func TestScrollingShowBottom(t *testing.T) {
 		t.Errorf("expected scrolling mode to be ScrollingShow, direction to be SwapDirectionBottom, and target to be %v, got mode: %v, direction: %v, target: %v", target, swap.scrolling.mode, swap.scrolling.direction, swap.scrolling.target)
 	}
 }
+
+// TestStringForVersion4 tests the htmx 4 syntax of the String method
+func TestStringForVersion4(t *testing.T) {
+	tests := []struct {
+		swap     *Swap
+		expected string
+	}{
+		{NewSwap(), "innerHTML"},
+		{NewSwap().ScrollBottom(), "innerHTML scroll:bottom"},
+		{NewSwap().ScrollBottom("#list"), `innerHTML scroll:bottom scrollTarget:"#list"`},
+		{NewSwap().ShowTop("window"), `innerHTML show:top showTarget:"window"`},
+		{NewSwap().ShowTop(`[name="q"]`), `innerHTML show:top showTarget:'[name="q"]'`},
+		{NewSwap().Swap(), "innerHTML swap:0s"},
+		{NewSwap().Settle(), "innerHTML settle:20ms"},
+		{NewSwap().Swap(90 * time.Second), "innerHTML swap:90s"},
+		{NewSwap().Settle(1500 * time.Millisecond), "innerHTML settle:1500ms"},
+		{NewSwap().Swap(500 * time.Microsecond), "innerHTML swap:0.5ms"},
+		{NewSwap().Transition(true).IgnoreTitle(false), "innerHTML transition:true ignoreTitle:false"},
+		{NewSwap().FocusScroll(false), "innerHTML focusScroll:false"},
+		{NewSwap().Style(SwapInnerMorph), "innerMorph"},
+		{NewSwap().Style(SwapOuterMorph), "outerMorph"},
+		{NewSwap().Style(SwapOuterSync), "outerSync"},
+		{NewSwap().Style(SwapTextContent), "textContent"},
+	}
+
+	for _, tt := range tests {
+		if got := tt.swap.StringFor(Version4); got != tt.expected {
+			t.Errorf("expected string output to be %s, got %s", tt.expected, got)
+		}
+	}
+}
+
+// TestStringForVersion2 tests that the htmx 2 syntax of the String method stays as it is
+func TestStringForVersion2(t *testing.T) {
+	swap := NewSwap().Style(SwapOuterHTML).ShowTop("#main").Transition(true).IgnoreTitle(false).FocusScroll(true).Settle(1500 * time.Millisecond)
+	expected := "outerHTML show:#main:top transition:true ignoreTitle:false focus-scroll:true settle:1.5s"
+
+	if swap.String() != expected {
+		t.Errorf("expected string output to be %s, got %s", expected, swap.String())
+	}
+
+	if swap.StringFor(Version2) != expected {
+		t.Errorf("expected Version2 output to be %s, got %s", expected, swap.StringFor(Version2))
+	}
+
+	if swap.StringFor(Version(3)) != expected {
+		t.Errorf("expected an unknown version to write htmx 2 syntax %s, got %s", expected, swap.StringFor(Version(3)))
+	}
+
+	bare := NewSwap().Swap()
+	if bare.String() != "innerHTML swap" {
+		t.Errorf("expected string output to be innerHTML swap, got %s", bare.String())
+	}
+}

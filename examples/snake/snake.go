@@ -7,7 +7,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"regexp"
 	"sync"
 	"time"
 )
@@ -47,6 +46,9 @@ func main() {
 		},
 	}
 
+	// the pages load htmx 4
+	app.htmx.SetVersion(htmx.Version4)
+
 	placeFood(&app.game)
 
 	sseManager = sse.NewManager(5)
@@ -68,10 +70,8 @@ func main() {
 				log.Printf("error rendering page: %v", err.Error())
 			}
 
-			re := regexp.MustCompile(`\s+`)
-			stringOut := re.ReplaceAllString(string(out), "")
-
-			sseManager.Send(sse.NewMessage(stringOut).WithEvent("board"))
+			// htmx 4 swaps a message without an event name into the hx-sse:connect element
+			sseManager.Send(sse.NewMessage(string(out)))
 			time.Sleep(150 * time.Millisecond)
 		}
 	}()
